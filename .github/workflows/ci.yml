@@ -1,0 +1,33 @@
+name: Verify CivicLens
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run test:integration
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - name: Start disposable Supabase stack and apply migrations
+        run: supabase start -x studio,postgres-meta,realtime,imgproxy,edge-runtime,logflare,vector,supavisor
+      - name: Save local test credentials without logging them
+        run: |
+          mkdir -p .data/ci
+          supabase status -o json > .data/ci/supabase.json
+      - run: npm run test:cloud
+      - name: Stop disposable stack
+        if: always()
+        run: supabase stop --no-backup
+
