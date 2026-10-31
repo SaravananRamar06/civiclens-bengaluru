@@ -15,11 +15,12 @@ export default function ReportDialog({
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
     [signedIn, setSignedIn] = useState(false),
+    [mode, setMode] = useState(""),
     [reportId, setReportId] = useState("");
   useEffect(() => {
     fetch("/api/session")
       .then((r) => r.json())
-      .then((d) => setSignedIn(d.signedIn))
+      .then((d) => { setSignedIn(d.signedIn); setMode(d.mode || "cloud"); })
       .catch(() =>
         setMessage("Could not verify your session. Please retry sign-in."),
       );
@@ -78,11 +79,9 @@ export default function ReportDialog({
         {!signedIn ? (
           <>
             <div className="notice">
-              {configured
-                ? "A private receipt cookie lets this browser own and track local reports. Google sign-in is available when configured."
-                : "Start a private local workspace to submit and track reports."}
+              {mode === "local-receipt" ? "Start a private local workspace to submit and track reports." : "Sign in with Google to save private reports and follow their review history."}
             </div>
-            <button
+            {mode === "local-receipt" && <button
               className="primary full-width"
               onClick={async () => {
                 const res = await fetch("/api/session", { method: "POST" });
@@ -92,10 +91,10 @@ export default function ReportDialog({
               }}
             >
               Continue in local workspace <ArrowRight size={16} />
-            </button>
-            <a className="text-button" href="/auth/signin">
+            </button>}
+            {mode === "cloud" && <a className="text-button" href="/auth/signin">
               Continue with Google <ArrowRight size={16} />
-            </a>
+            </a>}
           </>
         ) : (
           <form onSubmit={submit}>

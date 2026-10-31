@@ -1,6 +1,7 @@
 import { sameOrigin } from "@/lib/request-security";
 import { z } from "zod";
-import { authenticatedDatabase } from "@/lib/supabase";
+import { cloudIdentity, cloudReport, reportSelection, apiFailure, ApiError } from "@/lib/cloud-reports";
+import { permittedTransitions } from "@/lib/report-policy";
 import { localMode, localOwner, ownedReports } from "@/lib/local-workspace";
 import { db } from "@/lib/db";
 import { randomUUID } from "node:crypto";
@@ -19,12 +20,12 @@ const input = z.object({
   latitude: z.number().min(12.65).max(13.3),
   longitude: z.number().min(77.2).max(77.95),
 });
-export async function GET() {
+export async function GET(request: Request) {
   if (localMode()) {
     const owner = await localOwner();
     return owner
       ? Response.json(
-          { reports: ownedReports(owner) },
+          { reports: ownedReports(owner).map(r => ({ ...r, allowedTransitions: permittedTransitions(r.status, true, true), canAnalyze: true })), mode: "local-receipt", isOperator: false },
           { headers: { "Cache-Control": "no-store" } },
         )
       : Response.json(
@@ -32,22 +33,16 @@ export async function GET() {
           { status: 401 },
         );
   }
-  const client = await authenticatedDatabase();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user)
-    return Response.json({ error: "Google sign-in required" }, { status: 401 });
-  const { data, error } = await client
-    .from("civic_reports")
-    .select(
-      "id,description,category,latitude,longitude,status,priority,created_at",
-    )
-    .order("created_at", { ascending: false })
-    .limit(100);
-  return error
-    ? Response.json({ error: "Could not retrieve reports" }, { status: 502 })
-    : Response.json({ reports: data });
+  try {
+    const identity = await cloudIdentity();
+    const scope = new URL(request.url).searchParams.get("scope");
+    if (scope === "review" && !identity.isOperator) throw new ApiError("Operator access required", 403);
+    let query = identity.client.from("civic_reports").select(reportSelection).order("created_at", { ascending: false }).limit(100);
+    if (scope !== "review") query = query.eq("owner_id", identity.user.id);
+    const { data, error } = await query;
+    if (error) throw new ApiError("Could not retrieve reports", 502);
+    return Response.json({ reports: data.map(r => cloudReport(r, identity)), mode: "cloud", isOperator: identity.isOperator }, { headers: { "Cache-Control": "private, no-store" } });
+  } catch (error) { return apiFailure(error); }
 }
 export async function POST(request: Request) {
   if (!sameOrigin(request))
@@ -102,21 +97,11 @@ export async function POST(request: Request) {
       .run(report.id, owner, JSON.stringify(report));
     return Response.json(report, { status: 201 });
   }
-  const client = await authenticatedDatabase();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user)
-    return Response.json({ error: "Google sign-in required" }, { status: 401 });
-  const { data, error } = await client
-    .from("civic_reports")
-    .insert({ ...parsed.data, owner_id: user.id })
-    .select("id,status,created_at")
-    .single();
-  return error
-    ? Response.json(
-        { error: "Could not save your report. Please retry." },
-        { status: 502 },
-      )
-    : Response.json(data, { status: 201 });
+  try {
+    const identity = await cloudIdentity();
+    const { data, error } = await identity.client.from("civic_reports")
+      .insert({ ...parsed.data, owner_id: identity.user.id }).select(reportSelection).single();
+    if (error) throw new ApiError(error.message.includes("Hourly report limit") ? "Hourly report limit reached." : "Could not save your report. Please retry.", error.message.includes("Hourly report limit") ? 429 : 502);
+    return Response.json(cloudReport(data, identity), { status: 201, headers: { "Cache-Control": "no-store" } });
+  } catch (error) { return apiFailure(error); }
 }

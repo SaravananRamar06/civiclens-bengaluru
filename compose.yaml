@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    env_file: .env.local
+    environment:
+      CIVIC_LOCAL_MODE: "false"
+      WORKFLOW_TARGET_WORLD: local
+      WORKFLOW_LOCAL_DATA_DIR: /app/.workflow-data
+      WORKFLOW_LOCAL_BASE_URL: http://127.0.0.1:3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - workflow-data:/app/.workflow-data
+    restart: unless-stopped
+volumes:
+  workflow-data:

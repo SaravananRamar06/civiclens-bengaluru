@@ -2,8 +2,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { db } from "./db";
-export const localMode = () =>
-  process.env.CIVIC_LOCAL_MODE === "true" && !process.env.VERCEL;
+import { localMode } from "./config";
+export { localMode } from "./config";
 function sessions() {
   db().exec(
     "CREATE TABLE IF NOT EXISTS local_sessions(token_hash TEXT PRIMARY KEY,owner TEXT NOT NULL,expires_at TEXT NOT NULL)",
@@ -54,4 +54,11 @@ export function ownedReport(id: string, owner: string) {
     .prepare("SELECT payload FROM reports WHERE id=? AND owner=?")
     .get(id, owner) as { payload: string } | undefined;
   return row ? JSON.parse(row.payload) : null;
+}
+
+export async function endLocalSession() {
+  const jar = await cookies();
+  const token = jar.get("civic_receipt")?.value;
+  if (token) sessions().prepare("DELETE FROM local_sessions WHERE token_hash=?").run(createHash("sha256").update(token).digest("hex"));
+  jar.delete("civic_receipt");
 }

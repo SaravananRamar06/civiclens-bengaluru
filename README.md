@@ -1,6 +1,6 @@
 # CivicLens · Bengaluru
 
-An evidence-first civic grievance and infrastructure triage application, built with Next.js 16, React 19, TypeScript, MapLibre GL, AI SDK 7 and Workflow SDK 5. Local reporting works without cloud credentials. Supabase/PostGIS migrations and Google OAuth are included for your own hosting setup.
+An evidence-first civic grievance and infrastructure triage application, built with Next.js 16, React 19, TypeScript, MapLibre GL, AI SDK 7 and Workflow SDK 5. Local reporting works without cloud credentials. Cloud mode uses Supabase Auth, PostgreSQL/PostGIS and private Storage, with an operator queue and citizen-confirmed closure. A Docker deployment and [hosting guide](docs/HOSTING.md) are included.
 
 ## Run locally
 
@@ -50,17 +50,22 @@ Keep all credentials in ignored `.env.local`; commit only `.env.example`.
 
 - `CIVIC_LOCAL_MODE=true`: local receipt sessions and SQLite. The supplied start scripts bind to loopback. **Do not publicly expose this local workspace mode.**
 - `GEMINI_API_KEY`: your Google AI Studio key for optional real inference. `GEMINI_MODEL` defaults to `gemini-3.8-flash`; verify availability and quota in your account.
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: optional Supabase connection. Public-facing keys are publishable keys only.
-- `SUPABASE_SECRET_KEY`: server-only worker credential required by the cloud archive-analysis workflow. Never prefix this with `NEXT_PUBLIC_`.
+- `APP_ORIGIN`: the public HTTPS origin for cloud mode.
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`: runtime Supabase connection; `NEXT_PUBLIC_SUPABASE_*` aliases remain supported.
+- `SUPABASE_SECRET_KEY`: server-only worker credential required by cloud AI analysis and maintenance. Never prefix this with `NEXT_PUBLIC_`.
 - `CIVIC_DATA_DIR`: optional local database/evidence directory; leave unset for the usual `.data` directory.
 
 Google OAuth requires enabling the Google provider in your own Supabase project and allowlisting `/auth/callback` for localhost and your deployed origin. Google sign-in and live inference cannot be verified until those external credentials are configured.
 
 ## Hosting yourselves
 
-The current project is designed and verified first as a local workspace. Cloud mode (`CIVIC_LOCAL_MODE=false`) has PostgreSQL source reads, authenticated report endpoints and protected operator transitions. Schema migrations are in `supabase/migrations/`. Run them in order in a fresh Supabase project. The cloud attachment and resolution-evidence workflow still needs to be connected before a public pilot; do not present cloud mode as a production-ready civic authority portal.
+Follow [docs/HOSTING.md](docs/HOSTING.md) for migrations, Google OAuth, operator membership, runtime environment variables, real archive import, Docker/Node hosting, health checks and maintenance.
 
-Use durable database/object storage for hosted records; do not rely on a serverless filesystem. Configure Google OAuth and server secrets in the hosting provider. Keep local receipt mode disabled. Review the RLS policies and operator membership before granting access. No external authority dispatch occurs automatically.
+Cloud mode includes private report/evidence access through PostgreSQL RLS and Storage policies, bounded image/audio uploads, immutable evidence, audited operator actions, resolution photographs from the current review cycle, citizen-only confirmation/reopening, private exports and optional live multimodal AI. The UI adapts to local versus cloud sessions and exposes the review queue only to designated operators. Source and native report AI share a daily budget of 20 analyses per user and 50 for the project, counting failed attempts.
+
+The supplied container setup supports one persistent application instance. Supabase stores all citizen data; the optional archive-analysis workflow uses a durable local volume. For multiple replicas use a supported shared workflow backend. No external authority dispatch occurs automatically.
+
+GitHub Actions runs `npm run test:cloud` against an isolated real Supabase stack. Test users and media are confined to that disposable backend; tests refuse hosted Supabase URLs. The suite does not claim to verify an unconfigured Google OAuth client or Gemini account.
 
 ## Architecture
 
@@ -73,6 +78,7 @@ flowchart LR
  Consent --> Gemini[Gemini live multimodal analysis]
  API -. cloud configuration .-> Auth[Supabase Google OAuth]
  API -. cloud configuration .-> PG[PostgreSQL / PostGIS + RLS]
+ API -. private attachments .-> Storage[Supabase private Storage]
  Workflow[Durable archive analysis] -. worker credentials .-> PG
  Workflow --> Gemini
 ```

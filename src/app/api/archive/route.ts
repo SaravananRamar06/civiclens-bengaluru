@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { publicDatabase } from "@/lib/supabase";
+import { localMode } from "@/lib/config";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams,
@@ -12,8 +13,7 @@ export async function GET(request: Request) {
     size = 8;
   try {
     if (
-      process.env.CIVIC_LOCAL_MODE !== "true" &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL
+      !localMode()
     ) {
       let query = publicDatabase()
         .from("civic_sources")

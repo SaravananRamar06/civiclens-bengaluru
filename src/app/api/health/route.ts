@@ -1,12 +1,15 @@
 import { db } from "@/lib/db";
 import { publicDatabase } from "@/lib/supabase";
+import { localMode, appOrigin } from "@/lib/config";
 export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const cloud =
-      !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.CIVIC_LOCAL_MODE !== "true";
+      !localMode();
     if (cloud) {
+      appOrigin();
+      const version = await publicDatabase().rpc("civic_schema_version");
+      if (version.error || version.data !== 4) throw Error("Apply cloud migrations");
       const { error } = await publicDatabase()
         .from("civic_sources")
         .select("id")

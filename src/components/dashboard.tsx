@@ -602,7 +602,8 @@ function CaseDrawer({
   onClose: () => void;
 }) {
   const [analysis, setAnalysis] = useState(""),
-    [loading, setLoading] = useState(false);
+    [loading, setLoading] = useState(false),
+    [analysisId, setAnalysisId] = useState("");
   return (
     <div className="overlay" onClick={onClose}>
       <aside className="case-drawer" onClick={(e) => e.stopPropagation()}>
@@ -652,19 +653,27 @@ function CaseDrawer({
           onClick={async () => {
             setLoading(true);
             try {
-              const res = await fetch("/api/analysis", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sourceId: r.id }),
-              });
-              const body = await res.json();
-              setAnalysis(
-                body.error || body.explanation || JSON.stringify(body),
-              );
-            } catch {
-              setAnalysis(
-                "Analysis service unavailable. The source record remains available.",
-              );
+              let id = analysisId;
+              if (!id) {
+                const res = await fetch("/api/analysis", {
+                  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sourceId: r.id }),
+                });
+                const body = await res.json();
+                if (!res.ok) throw Error(body.error || "Could not start analysis");
+                id = body.id;
+                setAnalysisId(id);
+              }
+              for (let attempt = 0; attempt < 25; attempt++) {
+                const res = await fetch("/api/analysis?id=" + encodeURIComponent(id), { cache: "no-store" });
+                const body = await res.json();
+                if (!res.ok) throw Error(body.error || "Could not check analysis");
+                if (body.status === "completed") { setAnalysis(body.result.explanation); setAnalysisId(""); break; }
+                if (body.status === "failed") { setAnalysisId(""); throw Error("Analysis failed. The source remains saved; you can retry."); }
+                setAnalysis("Analysis is processing. You can check its status again shortly.");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            } catch (error) {
+              setAnalysis(error instanceof Error ? error.message : "Analysis service unavailable. The source record remains available.");
             } finally {
               setLoading(false);
             }
@@ -675,7 +684,7 @@ function CaseDrawer({
           ) : (
             <Sparkles size={16} />
           )}
-          Run live analysis
+          {analysisId ? "Check analysis status" : "Run live analysis"}
         </button>
         {analysis && (
           <div className="analysis-result" role="status">

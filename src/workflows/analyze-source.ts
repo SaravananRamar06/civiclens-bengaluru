@@ -8,7 +8,7 @@ function workerDatabase() {
   if (!process.env.SUPABASE_SECRET_KEY)
     throw new FatalError("Background database access is not configured.");
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)!,
     process.env.SUPABASE_SECRET_KEY,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );

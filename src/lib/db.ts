@@ -3,6 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { publicDatabase } from "./supabase";
+import { localMode } from "./config";
 import type { CivicReport, DashboardData } from "./types";
 let database: DatabaseSync | undefined;
 export function db() {
@@ -32,8 +33,7 @@ function normalize(payload: string): CivicReport {
 }
 export async function dashboard(): Promise<DashboardData> {
   if (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.CIVIC_LOCAL_MODE !== "true"
+    !localMode()
   ) {
     const client = publicDatabase();
     const [stats, categories, records] = await Promise.all([

@@ -1,2 +1,2 @@
 import { withWorkflow } from "workflow/next";
-export default withWorkflow({});
+export default withWorkflow({ output: "standalone" });

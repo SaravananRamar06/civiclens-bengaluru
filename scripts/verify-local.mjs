@@ -18,6 +18,7 @@ const server = spawn(
     env: {
       ...process.env,
       CIVIC_LOCAL_MODE: "true",
+      APP_ORIGIN: "",
       CIVIC_DATA_DIR: directory,
       GEMINI_API_KEY: "",
       VERCEL: "",

@@ -2,7 +2,7 @@ import { sameOrigin } from "@/lib/request-security";
 import { localMode, localOwner, ownedReport } from "@/lib/local-workspace";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { authenticatedDatabase } from "@/lib/supabase";
+import { cloudIdentity, apiFailure, ApiError } from "@/lib/cloud-reports";
 export async function POST(request: Request) {
   if (!sameOrigin(request))
     return Response.json(
@@ -70,21 +70,10 @@ export async function POST(request: Request) {
       .run(JSON.stringify(report), report.id, owner);
     return Response.json({ status: next });
   }
-  const client = await authenticatedDatabase();
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user)
-    return Response.json({ error: "Sign-in required" }, { status: 401 });
-  const { error } = await client.rpc("civic_transition", {
-    target: parsed.data.id,
-    next_status: parsed.data.status,
-    note: parsed.data.reason,
-  });
-  if (error)
-    return Response.json(
-      { error: "The requested transition is not permitted." },
-      { status: 403 },
-    );
-  return Response.json({ status: parsed.data.status });
+  try {
+    const { client } = await cloudIdentity();
+    const { error } = await client.rpc("civic_transition", { target: parsed.data.id, next_status: parsed.data.status, note: parsed.data.reason });
+    if (error) throw new ApiError(error.message.includes("resolution photo") ? "Attach a new resolution photo for this review cycle." : "The requested transition is not permitted.", error.message.includes("resolution photo") ? 400 : 403);
+    return Response.json({ status: parsed.data.status });
+  } catch (error) { return apiFailure(error); }
 }

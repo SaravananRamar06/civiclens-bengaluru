@@ -7,7 +7,7 @@ export function sameOrigin(request: Request) {
     return (
       ["http:", "https:"].includes(parsed.protocol) &&
       parsed.origin === origin &&
-      parsed.host.toLowerCase() === host.toLowerCase()
+      (process.env.APP_ORIGIN ? origin === process.env.APP_ORIGIN : parsed.host.toLowerCase() === host.toLowerCase())
     );
   } catch {
     return false;

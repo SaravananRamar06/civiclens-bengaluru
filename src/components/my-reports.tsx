@@ -23,6 +23,8 @@ type Report = {
   longitude: number;
   created_at: string;
   evidence?: { id: string; type: string; size: number }[];
+  allowedTransitions?: string[];
+  canAnalyze?: boolean;
   events?: { action: string; reason: string; created_at: string }[];
 };
 const transitions: Record<string, string[]> = {
@@ -37,29 +39,33 @@ const transitions: Record<string, string[]> = {
 export default function MyReports() {
   const [reports, setReports] = useState<Report[]>([]),
     [message, setMessage] = useState(""),
-    [busy, setBusy] = useState(false);
+    [mode, setMode] = useState(""),
+    [isOperator, setIsOperator] = useState(false),
+    [review, setReview] = useState(false);
   const refresh = () =>
-    fetch("/api/reports")
+    fetch("/api/reports" + (review ? "?scope=review" : ""), { cache: "no-store" })
       .then(async (r) => {
         const body = await r.json();
         if (!r.ok) throw Error(body.error);
         setReports(body.reports);
+        setMode(body.mode);
+        setIsOperator(body.isOperator);
         setMessage("");
       })
-      .catch((e) => setMessage(e.message));
+      .catch((e) => { setReports([]); setMessage(e.message); });
   useEffect(() => {
     refresh();
-  }, []);
+  }, [review]);
+  useEffect(() => { fetch("/api/session").then(r => r.json()).then(s => { setMode(s.mode); setIsOperator(!!s.isOperator); }).catch(() => {}); }, []);
   return (
     <section className="panel my-reports">
       <div className="panel-heading">
         <div>
           <h2>
-            My reports <span className="count-pill">{reports.length}</span>
+            {review ? "Operator review queue" : "My reports"} <span className="count-pill">{reports.length}</span>
           </h2>
           <p>
-            Private reports owned by this browser’s receipt. Local review
-            actions are not government actions.
+            {mode === "local-receipt" ? "Private reports owned by this browser receipt. Local review actions are not government actions." : "Private cloud reports. Project operators review evidence; citizens confirm closure. No government acceptance is implied."}
           </p>
         </div>
         <button className="text-button" onClick={refresh}>
@@ -67,7 +73,14 @@ export default function MyReports() {
           Refresh
         </button>
       </div>
-      {message && <div className="notice">{message}</div>}
+      <div className="local-actions">
+        {isOperator && <button className="text-button" onClick={() => setReview(!review)}>{review ? "Show my reports" : "Open operator review queue"}</button>}
+        {mode === "cloud" && <><a className="text-button" href="/auth/signin">Google sign-in</a><button className="text-button" onClick={async () => {
+          try { const response = await fetch("/api/session", { method: "DELETE" }); if (!response.ok) throw Error("Could not sign out"); setReports([]); setIsOperator(false); setReview(false); setMessage("Signed out."); } catch { setMessage("Could not sign out. Please retry."); }
+        }}>Sign out</button></>}
+      </div>
+      <p className="muted">Showing up to 100 recent reports in this view.</p>
+      {message && <div className="notice" role="status">{message}</div>}
       {!reports.length && !message && (
         <div className="empty">
           <FileText size={27} />
@@ -98,7 +111,8 @@ function LocalCase({
   reports: Report[];
   onUpdate: () => void;
 }) {
-  const [status, setStatus] = useState(transitions[r.status]?.[0] || ""),
+  const options = r.allowedTransitions ?? transitions[r.status] ?? [];
+  const [status, setStatus] = useState(options[0] || ""),
     [reason, setReason] = useState(""),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
@@ -107,12 +121,12 @@ function LocalCase({
     timer = useRef<ReturnType<typeof setTimeout> | null>(null),
     stream = useRef<MediaStream | null>(null);
   useEffect(() => {
-    setStatus(transitions[r.status]?.[0] || "");
-  }, [r.status]);
+    setStatus(options[0] || "");
+  }, [r.status, options.join(",")]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
-      if (recorder.current?.state === "recording") recorder.current.stop();
+      if (recorder.current?.state === "recording") { recorder.current.onstop = null; recorder.current.stop(); }
       stream.current?.getTracks().forEach((t) => t.stop());
     },
     [],
@@ -244,7 +258,7 @@ function LocalCase({
           Download handoff
         </a>
       </div>
-      <form
+      {options.length > 0 ? <form
         className="transition-form"
         onSubmit={async (e) => {
           e.preventDefault();
@@ -274,7 +288,7 @@ function LocalCase({
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          {transitions[r.status]?.map((s) => (
+          {options.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
@@ -290,7 +304,7 @@ function LocalCase({
         <button className="primary" disabled={busy || recording}>
           {busy ? <Loader2 className="spin" size={15} /> : null}Record action
         </button>
-      </form>
+      </form> : <p className="muted">No review action is currently available to your account. A project operator must advance the report before citizen verification.</p>}
       {message && (
         <div className="notice" role="status">
           {message}
@@ -309,7 +323,7 @@ function LocalCase({
           }}
         />
       </label>
-      <AnalysisControls id={r.id} analysis={r.analysis} onUpdate={onUpdate} />
+      {r.canAnalyze !== false && <AnalysisControls id={r.id} analysis={r.analysis} onUpdate={onUpdate} />}
       <details>
         <summary>Review activity · {r.events?.length || 0} events</summary>
         {r.events?.map((e, i) => (
