@@ -442,7 +442,10 @@ export default function ReportDialog({
                       <p className="muted">
                         The public dashboard shows the issue type, severity,
                         authority, status and rough area. Your words, photo,
-                        voice and exact location stay private.
+                        voice and exact location stay private.{" "}
+                        <a href="/privacy" target="_blank" rel="noreferrer">
+                          Privacy policy
+                        </a>
                       </p>
                       {message && (
                         <div className="notice" role="alert">
