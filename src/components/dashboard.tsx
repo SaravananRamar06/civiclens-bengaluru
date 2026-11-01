@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { Database, FileText, Loader2, Map, Rows3, Scale, Search, X } from "lucide-react";
+import { Database, FileText, Inbox, Loader2, Map, Rows3, Scale, Search, X } from "lucide-react";
 import type { CivicReport, DashboardData } from "@/lib/types";
 import dynamic from "next/dynamic";
 const CityMap = dynamic(() => import("./city-map"), {
@@ -19,6 +19,7 @@ import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
 import CivicMark from "./civic-mark";
 import CityWall from "./city-wall";
+import StaffDialog, { type Staff } from "./staff-dialog";
 import LiveAccountability from "./live-accountability";
 import CivicStamp, { StampTexture } from "./civic-stamp";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
@@ -53,7 +54,16 @@ export default function Dashboard() {
     [selected, setSelected] = useState<CivicReport | null>(null),
     [reporting, setReporting] = useState(false),
     [view, setView] = useState("City"),
-    [stamped, setStamped] = useState(false);
+    [stamped, setStamped] = useState(false),
+    [staff, setStaff] = useState<Staff | null>(null),
+    [staffSignIn, setStaffSignIn] = useState(false);
+  useEffect(() => {
+    fetch("/api/session")
+      .then((r) => r.json())
+      .then((s) => s.role && setStaff({ role: s.role, authority: s.authority }))
+      .catch(() => {});
+  }, []);
+  const tabs = staff ? [{ name: "Authority desk", Icon: Inbox }, ...views.slice(0, 3), views[4]] : views;
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [view]);
@@ -125,7 +135,7 @@ export default function Dashboard() {
           CivicLens
         </a>
         <nav aria-label="Main">
-          {views.map(({ name, Icon }) => (
+          {tabs.map(({ name, Icon }) => (
             <button
               key={name}
               aria-current={view === name ? "page" : undefined}
@@ -192,8 +202,24 @@ export default function Dashboard() {
           </>
         ) : (
           <div className="page">
-            <h1>{headings[view]}</h1>
-            {view === "My reports" ? (
+            <h1>
+              {view === "Authority desk"
+                ? staff?.role === "admin"
+                  ? "All authorities."
+                  : (staff?.authority ?? "Your authority") + "."
+                : headings[view]}
+            </h1>
+            {view === "Authority desk" ? (
+              <MyReports
+                key="desk"
+                desk
+                onReport={openReport}
+                onSignOut={() => {
+                  setStaff(null);
+                  setView("City");
+                }}
+              />
+            ) : view === "My reports" ? (
               <MyReports onReport={openReport} />
             ) : view === "Sources" ? (
               <section className="sources">
@@ -332,10 +358,25 @@ export default function Dashboard() {
       </main>
       <footer className="colophon">
         <span>CivicLens, an independent project for Bengaluru.</span>
+        {!staff && data?.configured.auth && (
+          <button className="text-button" onClick={() => setStaffSignIn(true)}>
+            Staff sign-in
+          </button>
+        )}
         <a href={sourceUrl} target="_blank" rel="noreferrer">
           Data: Sahaaya archive under ODbL
         </a>
       </footer>
+      {staffSignIn && (
+        <StaffDialog
+          onClose={() => setStaffSignIn(false)}
+          onSignedIn={(account) => {
+            setStaff(account);
+            setStaffSignIn(false);
+            setView("Authority desk");
+          }}
+        />
+      )}
       {selected && (
         <CaseDrawer
           report={selected}

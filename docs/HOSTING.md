@@ -36,15 +36,25 @@ Google sign-in is optional. To add it, create a web OAuth client in Google Cloud
 
 Enter the client ID and secret under Supabase Auth, Providers. Under URL Configuration, set the Site URL to your public address and allow `https://YOUR_DOMAIN/auth/callback`.
 
-## 4. Assign reviewers
+## 4. Assign staff
 
-A reviewer moves reports through acknowledgement and proposes a resolution. Each must sign in once, then run this as a database administrator:
+There are three levels of access, enforced by row-level security in the database:
 
-    insert into public.civic_operators(user_id)
-    select id from auth.users where email = 'REPLACE_WITH_REVIEWER_EMAIL'
-    on conflict do nothing;
+| Role | Can see | Can do |
+|---|---|---|
+| Citizen or guest | Their own reports and the public dashboard | File reports, confirm or reopen their own |
+| Officer | Reports routed to their authority | Move those reports through review and propose a resolution |
+| Admin | Every report | The same, for every authority |
 
-This is a project role, not a government credential. Proposing a resolution needs a repair photo from the current review cycle, and only the person who filed the report can confirm it or reopen it.
+Create the account under Supabase Authentication, Users, with an email and password. Then run one of these as a database administrator:
+
+    insert into public.civic_operators(user_id, role, authority)
+    select id, 'officer', 'BWSSB: water and sewerage' from auth.users where email = 'REPLACE_WITH_EMAIL';
+
+    insert into public.civic_operators(user_id, role)
+    select id, 'admin' from auth.users where email = 'REPLACE_WITH_EMAIL';
+
+Authority names are listed in `src/lib/routing.ts`. Staff sign in from the link in the page footer. These are project roles, not government credentials. Proposing a resolution needs a repair photo from the current review cycle, and only the person who filed the report can confirm it or reopen it.
 
 ## 5. Import the archive and check
 

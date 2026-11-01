@@ -32,9 +32,12 @@ export async function GET(request: Request) {
     if (scope === "review" && !identity.isOperator) throw new ApiError("Operator access required", 403);
     let query = identity.client.from("civic_reports").select(reportSelection).order("created_at", { ascending: false }).limit(100);
     if (scope !== "review") query = query.eq("owner_id", identity.user.id);
+    else if (identity.role === "officer") query = query.eq("authority", identity.authority!);
     const { data, error } = await query;
     if (error) throw new ApiError("Could not retrieve reports", 502);
-    return Response.json({ reports: data.map(r => cloudReport(r, identity)), mode: "cloud", isOperator: identity.isOperator }, { headers: { "Cache-Control": "private, no-store" } });
+    const order = ["Critical", "High", "Medium", "Low", "Unassessed"];
+    const rows = scope === "review" ? [...data].sort((a, b) => order.indexOf(a.priority) - order.indexOf(b.priority)) : data;
+    return Response.json({ reports: rows.map(r => cloudReport(r, identity)), mode: "cloud", isOperator: identity.isOperator }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return apiFailure(error); }
 }
 export async function POST(request: Request) {

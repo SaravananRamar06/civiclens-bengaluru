@@ -51,6 +51,16 @@ City corporations sit under the Greater Bengaluru Authority, which replaced the 
 - **No simulated output:** if the model is unavailable, the app says so and the report stays saved.
 - **Consent and limits:** evidence goes to Google only with permission, and daily analysis budgets apply. Every rating is provisional.
 
+### Roles and access
+
+Staff sign in with a password from the page footer. Access is enforced by row-level security in the database, so it holds even for direct API calls.
+
+| Role | Can see | Can do |
+|---|---|---|
+| Citizen or guest | Their own reports and the public dashboard | File reports, confirm or reopen their own |
+| Officer | Reports routed to their authority | Move those reports through review and propose a resolution |
+| Admin | Every report | The same, for every authority |
+
 ### Privacy
 
 Reports are public in summary only. The dashboard shows the issue type, severity, authority, status and a location rounded to about a kilometre. Descriptions, photos, voice notes, identities and exact locations stay private, and an integration test checks that they never reach the public view.

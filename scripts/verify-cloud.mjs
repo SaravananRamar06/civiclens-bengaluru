@@ -30,7 +30,7 @@ async function identity() {
   const client = createServerClient(url, key, { cookies: { getAll: () => [...jar].map(([name,value]) => ({name,value})), setAll: values => values.forEach(v => jar.set(v.name,v.value)) } });
   const signedIn = await client.auth.signInWithPassword({ email, password });
   assert.ifError(signedIn.error);
-  return { id: created.data.user.id, client, cookie: () => [...jar].map(([k,v]) => `${k}=${v}`).join("; ") };
+  return { id: created.data.user.id, email, password, client, cookie: () => [...jar].map(([k,v]) => `${k}=${v}`).join("; ") };
 }
 async function call(path, actor, method="GET", body) {
   return fetch(origin + path, { method, headers: { Origin: origin, ...(actor ? { Cookie: actor.cookie() } : {}), ...(body && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}) }, body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined });
@@ -65,6 +65,19 @@ try {
   check((await stranger.client.from("civic_reports").select("id").eq("id",report.id)).data,[],"Direct Data API read obeys ownership RLS");
   check((await call("/api/reports?scope=review",stranger)).status,403,"Operator queue rejects citizen access");
   check((await (await call("/api/reports?scope=review",operator)).json()).reports.some(r=>r.id===report.id),true,"Operator sees the cloud review queue");
+  const [roadsOfficer, waterOfficer] = await Promise.all([identity(),identity()]);
+  assert.ifError((await admin.from("civic_operators").insert([{user_id:roadsOfficer.id,role:"officer",authority:"City corporation: roads"},{user_id:waterOfficer.id,role:"officer",authority:"BWSSB: water and sewerage"}])).error);
+  check(!!(await admin.from("civic_operators").insert({user_id:stranger.id,role:"officer"})).error,true,"An officer must belong to an authority");
+  check((await (await call("/api/reports?scope=review",roadsOfficer)).json()).reports.find(r=>r.id===report.id)?.allowedTransitions,["Acknowledged"],"Officer can act on a report routed to their authority");
+  check((await (await call("/api/reports?scope=review",waterOfficer)).json()).reports.some(r=>r.id===report.id),false,"Officer cannot list another authority's reports");
+  check((await waterOfficer.client.from("civic_reports").select("id").eq("id",report.id)).data,[],"Direct Data API read is scoped to the officer's authority");
+  check((await transition(report.id,waterOfficer,"Acknowledged")).status,403,"Officer cannot act on another authority's report");
+  check((await attach(report.id,waterOfficer)).status,409,"Officer cannot attach evidence to another authority's report");
+  check((await (await call("/api/session",roadsOfficer)).json()).role,"officer","Session reports the staff role");
+  const signIn = (email,password) => fetch(origin+"/api/staff/signin",{method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+  check((await signIn(roadsOfficer.email,roadsOfficer.password)).status,200,"Officer signs in with a password");
+  check((await signIn(roadsOfficer.email,"wrong-password")).status,401,"Wrong password is refused");
+  check((await signIn(stranger.email,stranger.password)).status,403,"An account with no staff role cannot use staff sign-in");
   check((await transition(report.id,owner,"Acknowledged")).status,403,"Citizen cannot acknowledge own report in cloud mode");
   check((await transition(report.id,operator,"Acknowledged")).status,200,"Operator acknowledges report");
   check((await transition(report.id,operator,"In progress")).status,200,"Operator starts review work");

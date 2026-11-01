@@ -1622,3 +1622,7 @@ time {
 .public-pin[data-count][data-severity="Critical"]::after {
   color: #fff;
 }
+.report-modal.staff-modal {
+  width: min(440px, 100%);
+  padding-bottom: 28px;
+}

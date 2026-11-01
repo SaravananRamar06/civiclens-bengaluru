@@ -29,12 +29,20 @@ const transitions: Record<string, string[]> = {
   Closed: ["Reopened"],
   Reopened: ["Acknowledged"],
 };
-export default function MyReports({ onReport }: { onReport: () => void }) {
+export default function MyReports({
+  onReport,
+  desk = false,
+  onSignOut,
+}: {
+  onReport: () => void;
+  desk?: boolean;
+  onSignOut?: () => void;
+}) {
   const [reports, setReports] = useState<Report[]>([]),
     [message, setMessage] = useState(""),
     [mode, setMode] = useState(""),
     [isOperator, setIsOperator] = useState(false),
-    [review, setReview] = useState(false),
+    [review] = useState(desk),
     [loaded, setLoaded] = useState(false),
     [loading, setLoading] = useState(true);
   const refresh = () => {
@@ -74,7 +82,9 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
     <section className="my-reports">
       <div className="report-tools">
         <p>
-          {mode === "local-receipt"
+          {desk
+            ? "Most serious first. Every step you record is logged and appears on the public dashboard."
+            : mode === "local-receipt"
             ? "Saved in this browser. A summary appears on the public dashboard. Review steps here are not government actions."
             : "Your words, evidence and exact location are private. A summary appears on the public dashboard. You confirm every repair."}
         </p>
@@ -82,39 +92,20 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           Refresh
         </button>
       </div>
-      <div className="local-actions">
-        {isOperator && (
-          <button className="text-button" onClick={() => setReview(!review)}>
-            {review ? "Show my reports" : "Open operator review queue"}
+      {desk && (
+        <div className="local-actions">
+          <button
+            className="text-button"
+            onClick={async () => {
+              const response = await fetch("/api/session", { method: "DELETE" });
+              if (response.ok) onSignOut?.();
+              else setMessage("Could not sign out. Try again.");
+            }}
+          >
+            Sign out
           </button>
-        )}
-        {mode === "cloud" && (
-          <>
-            <a className="text-button" href="/auth/signin">
-              Google sign-in
-            </a>
-            <button
-              className="text-button"
-              onClick={async () => {
-                try {
-                  const response = await fetch("/api/session", {
-                    method: "DELETE",
-                  });
-                  if (!response.ok) throw Error("Could not sign out");
-                  setReports([]);
-                  setIsOperator(false);
-                  setReview(false);
-                  setMessage("Signed out.");
-                } catch {
-                  setMessage("Could not sign out. Please retry.");
-                }
-              }}
-            >
-              Sign out
-            </button>
-          </>
-        )}
-      </div>
+        </div>
+      )}
       {reports.length > 0 && (
         <p className="muted">Showing your latest {reports.length} of up to 100 reports.</p>
       )}
@@ -133,10 +124,16 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
       )}
       {!loading && loaded && !reports.length && !message && (
         <div className="empty">
-          <p>You haven’t reported anything yet. Your reports and their review history will appear here.</p>
-          <button className="primary" onClick={onReport}>
-            Report an issue
-          </button>
+          {desk ? (
+            <p>No reports are waiting for you.</p>
+          ) : (
+            <>
+              <p>You haven’t reported anything yet. Your reports and their review history will appear here.</p>
+              <button className="primary" onClick={onReport}>
+                Report an issue
+              </button>
+            </>
+          )}
         </div>
       )}
       {reports.map((report) => (
@@ -144,6 +141,7 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           key={report.id}
           report={report}
           reports={reports}
+          desk={desk}
           onUpdate={refresh}
         />
       ))}
@@ -169,10 +167,12 @@ function StampTrail({ status }: { status: string }) {
 function LocalCase({
   report: r,
   reports,
+  desk,
   onUpdate,
 }: {
   report: Report;
   reports: Report[];
+  desk: boolean;
   onUpdate: () => void;
 }) {
   const options = r.allowedTransitions ?? transitions[r.status] ?? [];
@@ -280,6 +280,15 @@ function LocalCase({
       )}
       <StampTrail status={r.status} />
       <p>{r.description}</p>
+      {desk && (
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${r.latitude}&mlon=${r.longitude}#map=18/${r.latitude}/${r.longitude}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open the exact location
+        </a>
+      )}
       <p className="muted">
         Routed to {r.authority || "City corporation: general"}. {r.priorityReason} Tracking ID: {r.id}
       </p>
