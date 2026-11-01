@@ -6,7 +6,7 @@ import { localMode, localOwner, ownedReports } from "@/lib/local-workspace";
 import { db } from "@/lib/db";
 import { randomUUID } from "node:crypto";
 import { priorityFor } from "@/lib/triage";
-import { authorityFor, reportCategories } from "@/lib/routing";
+import { authorityFor, inferCategory, reportCategories } from "@/lib/routing";
 const input = z.object({
   description: z.string().trim().min(10).max(4000),
   category: z.enum(reportCategories),
@@ -52,6 +52,8 @@ export async function POST(request: Request) {
       },
       { status: 400 },
     );
+  if (parsed.data.category === "Other")
+    parsed.data.category = inferCategory(parsed.data.description);
   if (localMode()) {
     const owner = await localOwner();
     if (!owner)

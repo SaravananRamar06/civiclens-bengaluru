@@ -7,6 +7,7 @@ export type LocalAnalysis = {
   model: string;
   severity?: string;
   severityReason?: string;
+  tries?: number;
   observations?: {
     claim: string;
     evidenceId: string;
@@ -74,6 +75,9 @@ export default function AnalysisControls({
       {analysis && (
         <div className="analysis-result">
           <strong>Provisional AI assessment from {analysis.model}</strong>
+          {(analysis.tries ?? 1) > 1 && (
+            <p className="muted">The first attempt failed checks, so a second model corrected it.</p>
+          )}
           {analysis.severity && (
             <p>
               {analysis.severity} severity. {analysis.severityReason}

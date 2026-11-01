@@ -355,6 +355,7 @@ function LocalCase({
         >
           <select
             className="report-input"
+            aria-label="Next review step"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -364,6 +365,7 @@ function LocalCase({
           </select>
           <input
             className="report-input"
+            aria-label="Reason for this step"
             placeholder="Reason or evidence for this step"
             required
             minLength={3}
@@ -386,6 +388,7 @@ function LocalCase({
           {message}
         </div>
       )}
+      {options.includes("Resolution proposed") && (
       <label className="upload-button">
         Attach a real resolution photo
         <input
@@ -399,6 +402,7 @@ function LocalCase({
           }}
         />
       </label>
+      )}
       {r.canAnalyze !== false && (
         <AnalysisControls id={r.id} analysis={r.analysis} onUpdate={onUpdate} />
       )}

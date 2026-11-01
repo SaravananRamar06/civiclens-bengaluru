@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Noto_Sans_Kannada, Public_Sans } from "next/font/google";
 import "./civic.css";
 import { themeBootstrap } from "@/lib/theme";
@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   description,
   openGraph: { title: "CivicLens · Bengaluru", description, type: "website" },
   twitter: { card: "summary", title: "CivicLens · Bengaluru", description },
+};
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef0f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#14144a" },
+  ],
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

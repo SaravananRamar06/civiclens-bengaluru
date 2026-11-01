@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Loader2, Search, X } from "lucide-react";
+import { flushSync } from "react-dom";
+import { Database, FileText, Loader2, Map, Rows3, Scale, Search, X } from "lucide-react";
 import type { CivicReport, DashboardData } from "@/lib/types";
 import dynamic from "next/dynamic";
 const CityMap = dynamic(() => import("./city-map"), {
@@ -21,7 +22,13 @@ import CityWall from "./city-wall";
 import LiveAccountability from "./live-accountability";
 import CivicStamp, { StampTexture } from "./civic-stamp";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
-const views = ["City", "Accountability", "Records", "My reports", "Sources"];
+const views = [
+  { name: "City", Icon: Map },
+  { name: "Accountability", Icon: Scale },
+  { name: "Records", Icon: Rows3 },
+  { name: "My reports", Icon: FileText },
+  { name: "Sources", Icon: Database },
+];
 const headings: Record<string, string> = {
   Records: "Every complaint, as it was filed.",
   Accountability: "Closed, on whose word?",
@@ -101,6 +108,11 @@ export default function Dashboard() {
     };
   }, [query, category, page, archiveRetry, view]);
   const openReport = () => setReporting(true);
+  const go = (name: string) => {
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches)
+      return setView(name);
+    document.startViewTransition(() => flushSync(() => setView(name)));
+  };
   return (
     <div className="app">
       <StampTexture />
@@ -113,12 +125,13 @@ export default function Dashboard() {
           CivicLens
         </a>
         <nav aria-label="Main">
-          {views.map((name) => (
+          {views.map(({ name, Icon }) => (
             <button
               key={name}
               aria-current={view === name ? "page" : undefined}
-              onClick={() => setView(name)}
+              onClick={() => go(name)}
             >
+              <Icon size={20} aria-hidden="true" />
               {name}
             </button>
           ))}
@@ -161,7 +174,7 @@ export default function Dashboard() {
                   <button className="primary" onClick={openReport}>
                     Report an issue
                   </button>
-                  <button className="secondary" onClick={() => setView("Accountability")}>
+                  <button className="secondary" onClick={() => go("Accountability")}>
                     See who’s accountable
                   </button>
                 </div>

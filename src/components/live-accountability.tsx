@@ -18,16 +18,26 @@ export default function LiveAccountability({ onReport }: { onReport: () => void 
       .then(setRecord)
       .catch(() => setFailed(true));
   }, []);
-  const open = record?.reports.filter((r) => r.status !== "Closed").length ?? 0;
-  const critical = record?.reports.filter((r) => r.status !== "Closed" && r.severity === "Critical").length ?? 0;
+  const reports = record?.reports ?? [];
+  const open = reports.filter((r) => r.status !== "Closed");
+  const figures = [
+    { label: "Reports filed", value: reports.length },
+    { label: "Still open", value: open.length },
+    { label: "Critical and open", value: open.filter((r) => r.severity === "Critical").length },
+    { label: "Confirmed fixed", value: reports.length - open.length },
+  ];
   return (
     <section className="live-record">
       <h2>Reports filed here, and who has them</h2>
       {failed ? (
-        <p className="empty">Live figures can’t load right now.</p>
+        <p className="empty">Live figures can’t load right now. Refresh to try again.</p>
       ) : !record ? (
-        <p className="empty">Loading the public record…</p>
-      ) : record.reports.length === 0 ? (
+        <div className="live-skeleton" role="status" aria-label="Loading the public record">
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : reports.length === 0 ? (
         <div className="empty">
           <p>No reports have been filed yet. The first one starts this record.</p>
           <button className="primary" onClick={onReport}>
@@ -36,24 +46,30 @@ export default function LiveAccountability({ onReport }: { onReport: () => void 
         </div>
       ) : (
         <>
-          <p className="live-summary">
-            {record.reports.length} {record.reports.length === 1 ? "report" : "reports"} filed. {open} still open, {critical} of them critical.
-          </p>
-          <div className="table-frame">
+          <dl className="live-figures">
+            {figures.map((figure) => (
+              <div key={figure.label}>
+                <dd>{figure.value.toLocaleString("en-IN")}</dd>
+                <dt>{figure.label}</dt>
+              </div>
+            ))}
+          </dl>
+          <div className="table-frame" role="region" aria-label="Reports by authority" tabIndex={0}>
             <table className="authority-table">
+              <caption className="sr-only">Reports by responsible authority</caption>
               <thead>
                 <tr>
-                  <th>Authority</th>
-                  <th>Routed</th>
-                  <th>Acknowledged</th>
-                  <th>Typical response</th>
-                  <th>Confirmed fixed</th>
+                  <th scope="col">Authority</th>
+                  <th scope="col">Routed</th>
+                  <th scope="col">Acknowledged</th>
+                  <th scope="col">Typical response</th>
+                  <th scope="col">Confirmed fixed</th>
                 </tr>
               </thead>
               <tbody>
-                {record.authorities.map((row) => (
+                {record!.authorities.map((row) => (
                   <tr key={row.authority}>
-                    <td>{row.authority}</td>
+                    <th scope="row">{row.authority}</th>
                     <td>{row.routed}</td>
                     <td>{row.acknowledged}</td>
                     <td>{hours(row.medianHours)}</td>
@@ -65,9 +81,11 @@ export default function LiveAccountability({ onReport }: { onReport: () => void 
           </div>
           <h3>Latest reports</h3>
           <ol className="public-feed">
-            {record.reports.slice(0, 8).map((report) => (
+            {reports.slice(0, 8).map((report) => (
               <li key={report.ref}>
-                <strong data-severity={report.severity}>{report.severity}</strong>
+                <strong className="severity" data-severity={report.severity}>
+                  {report.severity}
+                </strong>
                 <span>{report.category}</span>
                 <span>{report.authority}</span>
                 <span className={`status ${report.status === "Closed" ? "closed" : "pending"}`}>
