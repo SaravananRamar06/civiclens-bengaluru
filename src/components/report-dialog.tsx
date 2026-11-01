@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2, MapPin, X } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, X, ShieldCheck } from "lucide-react";
+import { useDialog } from "./use-dialog";
 export default function ReportDialog({
   onClose,
+  onSaved,
   configured,
 }: {
   onClose: () => void;
+  onSaved: () => void;
   configured: boolean;
 }) {
+  const dialogRef = useDialog(onClose);
   const [description, setDescription] = useState(""),
     [category, setCategory] = useState("Road damage"),
     [latitude, setLatitude] = useState(""),
@@ -19,8 +23,15 @@ export default function ReportDialog({
     [reportId, setReportId] = useState("");
   useEffect(() => {
     fetch("/api/session")
-      .then((r) => r.json())
-      .then((d) => { setSignedIn(d.signedIn); setMode(d.mode || "cloud"); })
+      .then(async (r) => {
+        const body = await r.json();
+        if (!r.ok) throw Error(body.error || "Could not verify your session.");
+        return body;
+      })
+      .then((d) => {
+        setSignedIn(d.signedIn);
+        setMode(d.mode || "cloud");
+      })
       .catch(() =>
         setMessage("Could not verify your session. Please retry sign-in."),
       );
@@ -57,6 +68,8 @@ export default function ReportDialog({
   return (
     <div className="overlay modal-overlay" onClick={onClose}>
       <section
+        ref={dialogRef}
+        tabIndex={-1}
         className="report-modal"
         role="dialog"
         aria-modal="true"
@@ -70,31 +83,49 @@ export default function ReportDialog({
         >
           <X />
         </button>
+        <div className="modal-emblem">
+          <MapPin size={25} />
+        </div>
         <span className="section-kicker">YOUR CITY. YOUR VOICE.</span>
         <h2 id="report-title">Make the issue visible.</h2>
         <p>
           Submit genuine evidence of a local civic issue in Bengaluru. Your
           identity and exact location remain private.
         </p>
+        <div className="privacy-strip">
+          <ShieldCheck size={17} />
+          <span>
+            Private evidence. A traceable review. No personal details required
+            in your description.
+          </span>
+        </div>
         {!signedIn ? (
           <>
             <div className="notice">
-              {mode === "local-receipt" ? "Start a private local workspace to submit and track reports." : "Sign in with Google to save private reports and follow their review history."}
+              {!mode
+                ? "Checking your private session…"
+                : mode === "local-receipt"
+                  ? "Start a private local workspace to submit and track reports."
+                  : "Sign in with Google to save private reports and follow their review history."}
             </div>
-            {mode === "local-receipt" && <button
-              className="primary full-width"
-              onClick={async () => {
-                const res = await fetch("/api/session", { method: "POST" });
-                const body = await res.json();
-                if (res.ok) setSignedIn(true);
-                else setMessage(body.error);
-              }}
-            >
-              Continue in local workspace <ArrowRight size={16} />
-            </button>}
-            {mode === "cloud" && <a className="text-button" href="/auth/signin">
-              Continue with Google <ArrowRight size={16} />
-            </a>}
+            {mode === "local-receipt" && (
+              <button
+                className="primary full-width"
+                onClick={async () => {
+                  const res = await fetch("/api/session", { method: "POST" });
+                  const body = await res.json();
+                  if (res.ok) setSignedIn(true);
+                  else setMessage(body.error);
+                }}
+              >
+                Continue in local workspace <ArrowRight size={16} />
+              </button>
+            )}
+            {mode === "cloud" && (
+              <a className="text-button" href="/auth/signin">
+                Continue with Google <ArrowRight size={16} />
+              </a>
+            )}
           </>
         ) : (
           <form onSubmit={submit}>
@@ -202,7 +233,13 @@ export default function ReportDialog({
           </div>
         )}
         {reportId && (
-          <div className="analysis-result">Tracking ID: {reportId}</div>
+          <div className="analysis-result">
+            <strong>Report saved.</strong>
+            <p>Tracking ID: {reportId}</p>
+            <button className="primary" onClick={onSaved}>
+              Add evidence & track report <ArrowRight size={16} />
+            </button>
+          </div>
         )}
       </section>
     </div>

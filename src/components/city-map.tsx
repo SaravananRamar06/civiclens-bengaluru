@@ -51,7 +51,7 @@ export default function CityMap() {
             )
               continue;
             const marker = new maplibregl.Marker({
-              color: report.priority === "Critical" ? "#c85454" : "#3d5ce4",
+              color: report.priority === "Critical" ? "#c85454" : "#177a6b",
             })
               .setLngLat([report.longitude, report.latitude])
               .setPopup(

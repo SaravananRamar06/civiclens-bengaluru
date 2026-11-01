@@ -4,6 +4,8 @@ import AnalysisControls, { type LocalAnalysis } from "./analysis-controls";
 import { relatedReports } from "@/lib/spatial";
 import {
   FileText,
+  Plus,
+  ShieldCheck,
   Loader2,
   Mic,
   Paperclip,
@@ -36,14 +38,16 @@ const transitions: Record<string, string[]> = {
   Closed: ["Reopened"],
   Reopened: ["Acknowledged"],
 };
-export default function MyReports() {
+export default function MyReports({ onReport }: { onReport: () => void }) {
   const [reports, setReports] = useState<Report[]>([]),
     [message, setMessage] = useState(""),
     [mode, setMode] = useState(""),
     [isOperator, setIsOperator] = useState(false),
     [review, setReview] = useState(false);
   const refresh = () =>
-    fetch("/api/reports" + (review ? "?scope=review" : ""), { cache: "no-store" })
+    fetch("/api/reports" + (review ? "?scope=review" : ""), {
+      cache: "no-store",
+    })
       .then(async (r) => {
         const body = await r.json();
         if (!r.ok) throw Error(body.error);
@@ -52,20 +56,34 @@ export default function MyReports() {
         setIsOperator(body.isOperator);
         setMessage("");
       })
-      .catch((e) => { setReports([]); setMessage(e.message); });
+      .catch((e) => {
+        setReports([]);
+        setMessage(e.message);
+      });
   useEffect(() => {
     refresh();
   }, [review]);
-  useEffect(() => { fetch("/api/session").then(r => r.json()).then(s => { setMode(s.mode); setIsOperator(!!s.isOperator); }).catch(() => {}); }, []);
+  useEffect(() => {
+    fetch("/api/session")
+      .then((r) => r.json())
+      .then((s) => {
+        setMode(s.mode);
+        setIsOperator(!!s.isOperator);
+      })
+      .catch(() => {});
+  }, []);
   return (
     <section className="panel my-reports">
       <div className="panel-heading">
         <div>
           <h2>
-            {review ? "Operator review queue" : "My reports"} <span className="count-pill">{reports.length}</span>
+            {review ? "Operator review queue" : "My reports"}{" "}
+            <span className="count-pill">{reports.length}</span>
           </h2>
           <p>
-            {mode === "local-receipt" ? "Private reports owned by this browser receipt. Local review actions are not government actions." : "Private cloud reports. Project operators review evidence; citizens confirm closure. No government acceptance is implied."}
+            {mode === "local-receipt"
+              ? "Private reports owned by this browser receipt. Local review actions are not government actions."
+              : "Private cloud reports. Project operators review evidence; citizens confirm closure. No government acceptance is implied."}
           </p>
         </div>
         <button className="text-button" onClick={refresh}>
@@ -74,13 +92,47 @@ export default function MyReports() {
         </button>
       </div>
       <div className="local-actions">
-        {isOperator && <button className="text-button" onClick={() => setReview(!review)}>{review ? "Show my reports" : "Open operator review queue"}</button>}
-        {mode === "cloud" && <><a className="text-button" href="/auth/signin">Google sign-in</a><button className="text-button" onClick={async () => {
-          try { const response = await fetch("/api/session", { method: "DELETE" }); if (!response.ok) throw Error("Could not sign out"); setReports([]); setIsOperator(false); setReview(false); setMessage("Signed out."); } catch { setMessage("Could not sign out. Please retry."); }
-        }}>Sign out</button></>}
+        {isOperator && (
+          <button className="text-button" onClick={() => setReview(!review)}>
+            {review ? "Show my reports" : "Open operator review queue"}
+          </button>
+        )}
+        {mode === "cloud" && (
+          <>
+            <a className="text-button" href="/auth/signin">
+              Google sign-in
+            </a>
+            <button
+              className="text-button"
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/session", {
+                    method: "DELETE",
+                  });
+                  if (!response.ok) throw Error("Could not sign out");
+                  setReports([]);
+                  setIsOperator(false);
+                  setReview(false);
+                  setMessage("Signed out.");
+                } catch {
+                  setMessage("Could not sign out. Please retry.");
+                }
+              }}
+            >
+              Sign out
+            </button>
+          </>
+        )}
       </div>
       <p className="muted">Showing up to 100 recent reports in this view.</p>
-      {message && <div className="notice" role="status">{message}</div>}
+      {message && (
+        <div className="notice" role="status">
+          {message}
+          <button className="text-button" onClick={onReport}>
+            Start a report
+          </button>
+        </div>
+      )}
       {!reports.length && !message && (
         <div className="empty">
           <FileText size={27} />
@@ -89,6 +141,10 @@ export default function MyReports() {
             Use “Report an issue” to record a genuine Bengaluru civic issue. No
             example reports have been added.
           </p>
+          <button className="primary" onClick={onReport}>
+            <Plus size={16} />
+            Report an issue
+          </button>
         </div>
       )}
       {reports.map((report) => (
@@ -126,7 +182,10 @@ function LocalCase({
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
-      if (recorder.current?.state === "recording") { recorder.current.onstop = null; recorder.current.stop(); }
+      if (recorder.current?.state === "recording") {
+        recorder.current.onstop = null;
+        recorder.current.stop();
+      }
       stream.current?.getTracks().forEach((t) => t.stop());
     },
     [],
@@ -191,7 +250,15 @@ function LocalCase({
   return (
     <article className="local-case">
       <div className="local-case-heading">
-        <span className="status pending">{r.status}</span>
+        <span
+          className={`status ${r.status === "Closed" ? "closed" : "pending"}`}
+        >
+          {r.status}
+        </span>
+        <span className="private-badge">
+          <ShieldCheck size={13} />
+          Private report
+        </span>
         <span className="review-status">
           {r.priority} · provisional policy assessment
         </span>
@@ -258,53 +325,60 @@ function LocalCase({
           Download handoff
         </a>
       </div>
-      {options.length > 0 ? <form
-        className="transition-form"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setBusy(true);
-          try {
-            const response = await fetch("/api/reports/transition", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: r.id, status, reason }),
-              }),
-              data = await response.json();
-            if (!response.ok) throw Error(data.error);
-            setReason("");
-            setMessage("Review action recorded.");
-            onUpdate();
-          } catch (e) {
-            setMessage(
-              e instanceof Error ? e.message : "Could not update review.",
-            );
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <select
-          className="report-input"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
+      {options.length > 0 ? (
+        <form
+          className="transition-form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setBusy(true);
+            try {
+              const response = await fetch("/api/reports/transition", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ id: r.id, status, reason }),
+                }),
+                data = await response.json();
+              if (!response.ok) throw Error(data.error);
+              setReason("");
+              setMessage("Review action recorded.");
+              onUpdate();
+            } catch (e) {
+              setMessage(
+                e instanceof Error ? e.message : "Could not update review.",
+              );
+            } finally {
+              setBusy(false);
+            }
+          }}
         >
-          {options.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <input
-          className="report-input"
-          placeholder="Reason / evidence for this review action"
-          required
-          minLength={3}
-          maxLength={2000}
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-        <button className="primary" disabled={busy || recording}>
-          {busy ? <Loader2 className="spin" size={15} /> : null}Record action
-        </button>
-      </form> : <p className="muted">No review action is currently available to your account. A project operator must advance the report before citizen verification.</p>}
+          <select
+            className="report-input"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            {options.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <input
+            className="report-input"
+            placeholder="Reason / evidence for this review action"
+            required
+            minLength={3}
+            maxLength={2000}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <button className="primary" disabled={busy || recording}>
+            {busy ? <Loader2 className="spin" size={15} /> : null}Record action
+          </button>
+        </form>
+      ) : (
+        <p className="muted">
+          No review action is currently available to your account. A project
+          operator must advance the report before citizen verification.
+        </p>
+      )}
       {message && (
         <div className="notice" role="status">
           {message}
@@ -323,7 +397,9 @@ function LocalCase({
           }}
         />
       </label>
-      {r.canAnalyze !== false && <AnalysisControls id={r.id} analysis={r.analysis} onUpdate={onUpdate} />}
+      {r.canAnalyze !== false && (
+        <AnalysisControls id={r.id} analysis={r.analysis} onUpdate={onUpdate} />
+      )}
       <details>
         <summary>Review activity · {r.events?.length || 0} events</summary>
         {r.events?.map((e, i) => (
