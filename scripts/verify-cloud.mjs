@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-const config = JSON.parse(await readFile(process.env.CIVIC_TEST_STACK_FILE || ".data/ci/supabase.json", "utf8"));
+const config = JSON.parse(await readFile(process.env.CIVIC_TEST_STACK_FILE || ".data/ci/supabase.json", "utf8").then(s => s.replace(/^\uFEFF/, "")));
 const url = config.API_URL || config.api_url;
 assert(["localhost", "127.0.0.1"].includes(new URL(url).hostname), "Cloud tests may target only a disposable local Supabase stack");
 const key = config.PUBLISHABLE_KEY || config.ANON_KEY;

@@ -1,6 +1,6 @@
 import { sameOrigin } from "@/lib/request-security";
 import { z } from "zod";
-import { cloudIdentity, cloudReport, reportSelection, apiFailure, ApiError } from "@/lib/cloud-reports";
+import { cloudIdentity, cloudReport, readCloudReport, reportSelection, apiFailure, ApiError } from "@/lib/cloud-reports";
 import { permittedTransitions } from "@/lib/report-policy";
 import { localMode, localOwner, ownedReports } from "@/lib/local-workspace";
 import { db } from "@/lib/db";
@@ -100,8 +100,8 @@ export async function POST(request: Request) {
   try {
     const identity = await cloudIdentity();
     const { data, error } = await identity.client.from("civic_reports")
-      .insert({ ...parsed.data, owner_id: identity.user.id }).select(reportSelection).single();
+      .insert({ ...parsed.data, owner_id: identity.user.id }).select("id").single();
     if (error) throw new ApiError(error.message.includes("Hourly report limit") ? "Hourly report limit reached." : "Could not save your report. Please retry.", error.message.includes("Hourly report limit") ? 429 : 502);
-    return Response.json(cloudReport(data, identity), { status: 201, headers: { "Cache-Control": "no-store" } });
+    return Response.json(await readCloudReport(data.id, identity), { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiFailure(error); }
 }
