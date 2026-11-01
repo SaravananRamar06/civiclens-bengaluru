@@ -248,7 +248,7 @@ export default function ReportDialog({
         {receipt ? (
           <div className="result" role="status">
             <h2 id="report-title" className="result-severity" data-severity={receipt.priority}>
-              {receipt.priority === "Unassessed" ? "Received" : `${receipt.priority} severity`}
+              {receipt.priority === "Unassessed" ? "Report saved" : `${receipt.priority} severity`}
             </h2>
             <CivicStamp english="Received" kannada="ಸ್ವೀಕರಿಸಲಾಗಿದೆ" />
             <p className="result-route">Assigned to the review queue for {receipt.authority}</p>
@@ -444,12 +444,17 @@ export default function ReportDialog({
                         <MapPin size={16} />
                         Use my location
                       </button>
-                      <span className="muted">
+                      <span className="muted" aria-live="polite">
                         {point
-                          ? `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`
-                          : "Tap the map to place a pin"}
+                          ? `Pin placed at ${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`
+                          : "Tap the map, or use the arrow keys and press Enter"}
                       </span>
                     </div>
+                    <p className="muted location-note">
+                      The exact pin is visible only to you, officers of the assigned
+                      authority and admins. The public sees a location rounded to about
+                      a kilometre.
+                    </p>
                   </div>
                 </fieldset>
                 <div className="slip-actions">
@@ -491,6 +496,10 @@ export default function ReportDialog({
                         <a href="/privacy" target="_blank" rel="noreferrer">
                           Privacy policy
                         </a>
+                      </p>
+                      <p className="muted">
+                        Reporting as a guest? Your reports stay linked to this browser
+                        session. If you clear it, you lose access to them.
                       </p>
                       {message && (
                         <div className="notice" role="alert">

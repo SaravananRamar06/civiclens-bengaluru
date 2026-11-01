@@ -50,6 +50,17 @@ export default function LocationPicker({
         longitude: Number(event.lngLat.lng.toFixed(6)),
       }),
     );
+    const canvas = instance.getCanvas();
+    canvas.setAttribute(
+      "aria-label",
+      "Map of Bengaluru. Use the arrow keys to move the map, then press Enter to place the pin at the centre.",
+    );
+    canvas.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      const { lat, lng } = instance.getCenter();
+      report.current({ latitude: Number(lat.toFixed(6)), longitude: Number(lng.toFixed(6)) });
+    });
     map.current = instance;
     return () => {
       marker.current = null;
