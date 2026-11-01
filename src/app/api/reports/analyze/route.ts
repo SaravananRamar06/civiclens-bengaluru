@@ -4,7 +4,7 @@ import { localMode, localOwner } from "@/lib/local-workspace";
 import { analyzeLocalReport, AnalysisUnavailable } from "@/lib/local-analysis";
 import { analyzeCloudReport } from "@/lib/cloud-analysis";
 import { ApiError, apiFailure } from "@/lib/cloud-reports";
-export const maxDuration = 60;
+export const maxDuration = 75;
 export async function POST(request: Request) {
   if (!sameOrigin(request))
     return Response.json(
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   } catch (e) {
     if (e instanceof ApiError) return apiFailure(e);
     return Response.json(
-      { error: e instanceof AnalysisUnavailable ? e.message : "AI processing failed. Your report remains saved; check provider configuration and try again." },
+      { error: e instanceof AnalysisUnavailable ? e.message : "AI is unavailable right now. Your report is saved. Try again from My reports." },
       { status: 503 },
     );
   }

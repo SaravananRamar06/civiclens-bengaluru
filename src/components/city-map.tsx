@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import type { PublicReport } from "@/lib/accountability";
 export default function CityMap() {
   const container = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -42,15 +43,26 @@ export default function CityMap() {
       map.on("load", async () => {
         try {
           const open = await fetch("/api/public-reports").then((r) => (r.ok ? r.json() : null));
-          for (const report of open?.reports ?? []) {
+          // Rounded locations collide, so reports at one spot share a pin.
+          const spots = new Map<string, PublicReport[]>();
+          for (const report of (open?.reports ?? []) as PublicReport[]) {
+            const key = report.latitude + "," + report.longitude;
+            spots.set(key, [...(spots.get(key) ?? []), report]);
+          }
+          for (const reports of spots.values()) {
             const pin = document.createElement("span");
             pin.className = "public-pin";
-            pin.dataset.severity = report.severity;
+            const critical = reports.some((r) => r.severity === "Critical");
+            pin.dataset.severity = critical ? "Critical" : reports[0].severity;
+            if (reports.length > 1) pin.dataset.count = String(reports.length);
             new maplibregl.Marker({ element: pin })
-              .setLngLat([report.longitude, report.latitude])
+              .setLngLat([reports[0].longitude, reports[0].latitude])
               .setPopup(
                 new maplibregl.Popup().setText(
-                  `${report.category}. ${report.severity} severity. ${report.status}. Routed to ${report.authority}.`,
+                  reports
+                    .slice(0, 4)
+                    .map((r) => `${r.category}. ${r.severity} severity. ${r.status}. Routed to ${r.authority}.`)
+                    .join(" ") + (reports.length > 4 ? ` And ${reports.length - 4} more.` : ""),
                 ),
               )
               .addTo(map);

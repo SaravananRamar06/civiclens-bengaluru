@@ -201,7 +201,8 @@ export default function CityWall({
           </div>
         )}
       </div>
-      <div className="wall-frame" ref={frame}>
+      <div className="wall-frame" ref={frame} aria-busy={!wall}>
+        {!wall && <div className="wall-skeleton" aria-hidden="true" />}
         <canvas
           ref={canvas}
           role="img"

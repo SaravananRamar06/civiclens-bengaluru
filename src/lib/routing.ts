@@ -39,3 +39,15 @@ export function authorityFor(category: string, text = "") {
       return authorities.general;
   }
 }
+/** Reads the type of issue from the words used, so reports still reach the right body without AI. */
+export function inferCategory(text: string) {
+  const rules: [(typeof reportCategories)[number], RegExp][] = [
+    ["Electrical", /\b(live wires?|hanging wires?|exposed wires?|electric(al|ity)?|power cut|transformer|street ?lights?)\b/i],
+    ["Water or drainage", /\b(water|leak(s|ing)?|pipes?|sewage|drains?|flood(s|ed|ing)?|waterlogg(ed|ing)|storm ?water)\b/i],
+    ["Waste", /\b(garbage|waste|trash|rubbish|debris)\b/i],
+    ["Pollution", /\b(pollution|smoke|fumes|dust|noise|chemical|effluent)\b/i],
+    ["Road damage", /\b(potholes?|man ?holes?|roads?|bridges?|footpaths?|pavement|flyover)\b/i],
+    ["Obstruction", /\b(fallen tree|blocking|blocked|encroach(ment|ing)?|obstruct(ion|ing)?)\b/i],
+  ];
+  return rules.find(([, pattern]) => pattern.test(text))?.[0] ?? "Other";
+}
