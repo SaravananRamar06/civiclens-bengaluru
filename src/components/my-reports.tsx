@@ -290,7 +290,7 @@ function LocalCase({
         </a>
       )}
       <p className="muted">
-        Routed to {r.authority || "City corporation: general"}. {r.priorityReason} Tracking ID: {r.id}
+        Assigned to the review queue for {r.authority || "City corporation: general"}. {r.priorityReason} Tracking ID: {r.id}
       </p>
       <div className="evidence-grid">
         {r.evidence?.map((e) => {

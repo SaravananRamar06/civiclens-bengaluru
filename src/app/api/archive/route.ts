@@ -15,26 +15,33 @@ export async function GET(request: Request) {
     if (
       !localMode()
     ) {
-      let query = publicDatabase()
-        .from("civic_sources")
-        .select("id,category,detail,ward,reported_at,source_status", {
-          count: "exact",
-        })
-        .order("reported_at", { ascending: false });
-      if (category && category !== "All categories")
-        query = query.eq("category", category);
       const search = q.replace(/[^\p{L}\p{N}\s/-]/gu, " ").trim().split(/\s+/).join("%");
-      if (search)
-        query = query.or(
-          `detail.ilike.%${search}%,ward.ilike.%${search}%,id.ilike.%${search}%,category.ilike.%${search}%`,
-        );
-      const { data, count, error } = await query.range(
-        page * size,
-        (page + 1) * size - 1,
-      );
+      const records = (head: boolean) => {
+        let query = publicDatabase()
+          .from("civic_sources")
+          .select("id,category,detail,ward,reported_at,source_status", {
+            count: "exact",
+            head,
+          });
+        if (category && category !== "All categories")
+          query = query.eq("category", category);
+        if (search)
+          query = query.or(
+            `detail.ilike.%${search}%,ward.ilike.%${search}%,id.ilike.%${search}%,category.ilike.%${search}%`,
+          );
+        return query;
+      };
+      // Many complaints share a date, so id keeps the order the same on every page.
+      const { data, count, error } = await records(false)
+        .order("reported_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(page * size, (page + 1) * size - 1);
       // PostgREST rejects a range past the last row, which is simply an empty page.
-      if (error?.code === "PGRST103")
-        return Response.json({ reports: [], matched: 0, page, size });
+      if (error?.code === "PGRST103") {
+        const total = await records(true);
+        if (total.error) throw total.error;
+        return Response.json({ reports: [], matched: total.count, page, size });
+      }
       if (error) throw error;
       return Response.json({
         reports: data.map((r) => ({
@@ -61,7 +68,7 @@ export async function GET(request: Request) {
       .prepare(
         "SELECT id,payload FROM source_records " +
           where +
-          ` ORDER BY json_extract(payload,'$."Grievance Date"') DESC LIMIT ? OFFSET ?`,
+          ` ORDER BY json_extract(payload,'$."Grievance Date"') DESC, id ASC LIMIT ? OFFSET ?`,
       )
       .all(...args, size, page * size) as { id: string; payload: string }[];
     return Response.json(

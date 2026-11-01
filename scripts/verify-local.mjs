@@ -2,8 +2,35 @@ import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
+import { mkdirSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 const origin = "http://127.0.0.1:3187";
 const directory = resolve(".data", "verification", randomUUID());
+// Isolated pagination fixture: one newer record, then 18 sharing a date, added in
+// reverse so that a sort without a tie-breaker returns them out of id order.
+const tiedMarker = "isolatedpaginationfixture";
+const tiedIds = Array.from({ length: 18 }, (_, i) => `tied-${String(i).padStart(2, "0")}`);
+mkdirSync(directory, { recursive: true });
+{
+  const seed = new DatabaseSync(resolve(directory, "civiclens.sqlite"));
+  seed.exec(
+    "CREATE TABLE source_records (id TEXT PRIMARY KEY,payload TEXT NOT NULL,fetched_at TEXT NOT NULL)",
+  );
+  const insert = seed.prepare("INSERT INTO source_records VALUES (?,?,?)");
+  const payload = (id, date) =>
+    JSON.stringify({
+      "Complaint ID": id,
+      Category: id === "newest" ? "Isolated newest" : "Isolated tied",
+      "Sub Category": tiedMarker,
+      "Ward Name": "Isolated ward",
+      "Grievance Date": date,
+      "Grievance Status": "Registered",
+    });
+  for (const id of [...tiedIds].reverse())
+    insert.run(id, payload(id, "2026-01-01 10:00:00"), "2026-01-01");
+  insert.run("newest", payload("newest", "2026-01-02 10:00:00"), "2026-01-01");
+  seed.close();
+}
 const server = spawn(
   process.execPath,
   [
@@ -65,6 +92,37 @@ try {
   }
   assert(ready, "Local production server started");
   check((await call("/")).status, 200, "Production page renders");
+  const archivePage = async (page, category = "") => {
+    const r = await call(
+      `/api/archive?q=${tiedMarker}&page=${page}` +
+        (category ? `&category=${encodeURIComponent(category)}` : ""),
+    );
+    return r.json();
+  };
+  const walked = [];
+  let pagesRead = 0;
+  for (; pagesRead < 5; pagesRead++) {
+    const { reports, matched } = await archivePage(pagesRead);
+    check(matched, 19, `Archive page ${pagesRead + 1} keeps the full count`);
+    if (!reports.length) break;
+    walked.push(...reports.map((r) => r.id));
+  }
+  check(pagesRead, 3, "Archive pages stop after the last record");
+  check(
+    walked.join(),
+    ["newest", ...tiedIds].join(),
+    "Archive pages return every tied record once, newest first and then by id",
+  );
+  check(
+    (await archivePage(9999)).matched,
+    19,
+    "Archive page past the end keeps the full count",
+  );
+  check(
+    (await archivePage(0, "Isolated tied")).matched,
+    18,
+    "Archive category filter narrows the count",
+  );
   check(
     (await call("/api/reports")).status,
     401,

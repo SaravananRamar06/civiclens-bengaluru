@@ -7,6 +7,11 @@ import {
   type ThemePreference,
 } from "@/lib/theme";
 
+const options = [
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+  { value: "system", label: "System", Icon: Monitor },
+] as const;
 function readPreference(): ThemePreference {
   try {
     const value = localStorage.getItem(THEME_KEY);
@@ -51,35 +56,47 @@ export default function ThemeControl() {
       window.removeEventListener("storage", onStorage);
     };
   }, []);
+  const choose = (value: ThemePreference) => {
+    setPreference(value);
+    applyPreference(value);
+    try {
+      localStorage.setItem(THEME_KEY, value);
+    } catch {
+      /* Theme still works when storage is unavailable. */
+    }
+  };
+  const Current = options.find((option) => option.value === preference)!.Icon;
   return (
-    <div className="theme-control" role="group" aria-label="Appearance">
-      {(
-        [
-          { value: "light", label: "Light theme", Icon: Sun },
-          { value: "dark", label: "Dark theme", Icon: Moon },
-          { value: "system", label: "System theme", Icon: Monitor },
-        ] as const
-      ).map(({ value, label, Icon }) => (
-        <button
-          key={value}
-          type="button"
-          className="theme-option"
-          aria-label={label}
-          aria-pressed={preference === value}
-          title={label}
-          onClick={() => {
-            setPreference(value);
-            applyPreference(value);
-            try {
-              localStorage.setItem(THEME_KEY, value);
-            } catch {
-              /* Theme still works when storage is unavailable. */
-            }
-          }}
+    <>
+      <div className="theme-control" role="group" aria-label="Appearance">
+        {options.map(({ value, label, Icon }) => (
+          <button
+            key={value}
+            type="button"
+            className="theme-option"
+            aria-label={`${label} theme`}
+            aria-pressed={preference === value}
+            title={`${label} theme`}
+            onClick={() => choose(value)}
+          >
+            <Icon size={15} strokeWidth={1.7} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      <label className="theme-compact">
+        <span className="sr-only">Appearance</span>
+        <Current size={18} strokeWidth={1.7} aria-hidden="true" />
+        <select
+          value={preference}
+          onChange={(event) => choose(event.target.value as ThemePreference)}
         >
-          <Icon size={15} strokeWidth={1.7} aria-hidden="true" />
-        </button>
-      ))}
-    </div>
+          {options.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </>
   );
 }

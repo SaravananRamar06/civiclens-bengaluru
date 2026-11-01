@@ -26,7 +26,13 @@ type Assessment = {
   uncertainty: string[];
   observations: { claim: string; kind: string }[];
 };
-type Receipt = { id: string; priority: string; authority: string };
+type Receipt = {
+  id: string;
+  priority: string;
+  authority: string;
+  evidence: string[];
+  ai: "rated" | "declined" | "unavailable" | "failed";
+};
 export default function ReportDialog({
   onClose,
   onSaved,
@@ -45,7 +51,7 @@ export default function ReportDialog({
     [voice, setVoice] = useState<File | null>(null),
     [voiceUrl, setVoiceUrl] = useState(""),
     [recording, setRecording] = useState(false),
-    [consent, setConsent] = useState(true),
+    [consent, setConsent] = useState(false),
     [message, setMessage] = useState(""),
     [stage, setStage] = useState(-1),
     [seconds, setSeconds] = useState(0),
@@ -147,14 +153,18 @@ export default function ReportDialog({
       );
     }
   }
-  async function attach(id: string, file: File, notes: string[]) {
+  async function attach(id: string, file: File, label: string, saved: string[], notes: string[]) {
     const form = new FormData();
     form.set("reportId", id);
     form.set("file", file);
     form.set("purpose", "report");
-    const upload = await fetch("/api/reports/evidence", { method: "POST", body: form });
-    if (!upload.ok)
-      notes.push((await upload.json()).error || "An attachment failed. Add it again from My reports.");
+    try {
+      const upload = await fetch("/api/reports/evidence", { method: "POST", body: form });
+      if (upload.ok) saved.push(label);
+      else notes.push((await upload.json()).error || `The ${label.toLowerCase()} wasn’t saved. Add it again from My reports.`);
+    } catch {
+      notes.push(`The ${label.toLowerCase()} wasn’t saved. Add it again from My reports.`);
+    }
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -182,26 +192,37 @@ export default function ReportDialog({
       });
       const body = await res.json();
       if (!res.ok) throw Error(body.error);
-      const saved = { id: body.id, priority: body.priority, authority: body.authority };
+      const saved: Receipt = {
+        id: body.id,
+        priority: body.priority,
+        authority: body.authority,
+        evidence: [],
+        ai: !aiReady ? "unavailable" : consent ? "failed" : "declined",
+      };
       const notes: string[] = [];
       if (photo || voice) {
         setStage(++step);
-        if (photo) await attach(body.id, photo, notes);
-        if (voice) await attach(body.id, voice, notes);
+        if (photo) await attach(body.id, photo, "Photo", saved.evidence, notes);
+        if (voice) await attach(body.id, voice, "Voice note", saved.evidence, notes);
       }
       if (aiReady && consent) {
         setStage(++step);
-        const analysis = await fetch("/api/reports/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: body.id, consent: true }),
-        });
-        const result = await analysis.json();
-        if (analysis.ok) {
-          setAssessment(result);
-          saved.priority = result.severity;
-          saved.authority = result.authority;
-        } else notes.push(result.error);
+        try {
+          const analysis = await fetch("/api/reports/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: body.id, consent: true }),
+          });
+          const result = await analysis.json();
+          if (analysis.ok) {
+            setAssessment(result);
+            saved.priority = result.severity;
+            saved.authority = result.authority;
+            saved.ai = "rated";
+          } else if (result.error) notes.push(result.error);
+        } catch {
+          /* The receipt explains that the rating didn’t finish. */
+        }
       }
       setReceipt(saved);
       setMessage(notes.join(" "));
@@ -230,7 +251,7 @@ export default function ReportDialog({
               {receipt.priority === "Unassessed" ? "Received" : `${receipt.priority} severity`}
             </h2>
             <CivicStamp english="Received" kannada="ಸ್ವೀಕರಿಸಲಾಗಿದೆ" />
-            <p className="result-route">Routed to {receipt.authority}</p>
+            <p className="result-route">Assigned to the review queue for {receipt.authority}</p>
             {message && <div className="notice">{message}</div>}
             <dl>
               {assessment && (
@@ -272,8 +293,29 @@ export default function ReportDialog({
                   </dd>
                 </>
               )}
+              {receipt.ai !== "rated" && (
+                <>
+                  <dt>AI rating</dt>
+                  <dd>
+                    {receipt.ai === "declined"
+                      ? "Not used, so nothing went to Google."
+                      : receipt.ai === "unavailable"
+                        ? "Not available right now."
+                        : "Didn’t finish. You can try again from My reports."}{" "}
+                    Your report is saved, and keyword rules set its priority and queue.
+                  </dd>
+                </>
+              )}
+              <dt>Evidence saved</dt>
+              <dd>{receipt.evidence.length ? receipt.evidence.join(" and ") : "None attached"}</dd>
               <dt>Tracking ID</dt>
               <dd>{receipt.id}</dd>
+              <dt>What happens next</dt>
+              <dd>
+                Follow this report in My reports. CivicLens staff accounts can review it
+                there, and you can download its handoff packet to give to the authority
+                yourself. CivicLens doesn’t deliver it, and a response isn’t guaranteed.
+              </dd>
             </dl>
             <button className="primary full-width" onClick={onSaved}>
               Track this report
@@ -283,8 +325,9 @@ export default function ReportDialog({
           <>
             <h2 id="report-title">Report an issue in Bengaluru</h2>
             <p>
-              Show it or say it. CivicLens rates the severity and sends it to
-              the authority responsible.
+              Show it or say it. CivicLens assigns it to the responsible
+              authority’s review queue and prepares a handoff packet. It doesn’t
+              deliver reports to government authorities.
             </p>
             {!signedIn ? (
               <>
@@ -365,7 +408,7 @@ export default function ReportDialog({
                       >
                         {reportCategories.map((c) => (
                           <option key={c} value={c}>
-                            {c === "Other" ? "Not sure, decide for me" : c}
+                            {c === "Other" ? (aiReady && consent ? "Not sure, let AI decide" : "Not sure, use my words to decide") : c}
                           </option>
                         ))}
                       </select>
@@ -433,9 +476,11 @@ export default function ReportDialog({
                             onChange={(e) => setConsent(e.target.checked)}
                           />
                           <span>
-                            Rate severity with AI. Your words, photo and voice
-                            note go to Google. Free-tier inputs may be used for
-                            product improvement.
+                            Rate this with AI (optional). If you tick this, your
+                            words, photo and voice note go to Google, and free-tier
+                            inputs may be used for product improvement. If you
+                            don’t, nothing goes to Google and keyword rules are
+                            used instead. Your report is saved either way.
                           </span>
                         </label>
                       )}
