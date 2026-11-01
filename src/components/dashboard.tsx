@@ -1,16 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  Activity,
   ArrowRight,
   ArrowUpRight,
-  Compass,
-  Fingerprint,
   Trash2,
   Zap,
   Construction,
   Trees,
-  Check,
   ChevronRight,
   Database,
   ExternalLink,
@@ -45,6 +41,18 @@ import { ReportingGuide, SourceStatus } from "./archive-summary";
 import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
+function CivicMark() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path
+        d="M13 3H3v10M19 3h10v10M29 19v10H19M13 29H3V19"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <circle cx="16" cy="16" r="6" fill="currentColor" />
+    </svg>
+  );
+}
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null),
     [error, setError] = useState(""),
@@ -113,50 +121,50 @@ export default function Dashboard() {
     { title: string; accent: string; description: string }
   > = {
     Overview: {
-      title: "Your city.",
-      accent: "A clearer picture.",
+      title: "Bengaluru,",
+      accent: "in focus.",
       description:
-        "Understand what needs attention. Report what you see. Follow what happens next.",
+        "Explore Bengaluru’s public grievance archive or report a problem on your street. Follow each report from evidence to review.",
     },
     "My reports": {
-      title: "Your voice.",
-      accent: "A visible record.",
+      title: "Your reports.",
+      accent: "Your record.",
       description:
         "A private space for your evidence, review activity, and the issues you care about.",
     },
     "Issue explorer": {
-      title: "Every issue.",
-      accent: "In context.",
+      title: "The city,",
+      accent: "record by record.",
       description:
         "Explore Bengaluru’s civic records by category, neighbourhood, or tracking ID.",
     },
     Accountability: {
-      title: "Follow the evidence.",
-      accent: "Know the difference.",
+      title: "Follow the record.",
+      accent: "Question the status.",
       description:
         "Administrative closure and a verified repair are different things. See the record clearly.",
     },
     "Data & sources": {
-      title: "Open records.",
-      accent: "Nothing hidden.",
+      title: "Know the source.",
+      accent: "See the limits.",
       description:
         "Know where the data comes from, what it tells us, and where its limits lie.",
     },
   };
   const heading = titles[view];
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-view={view}>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
       <aside className="sidebar">
         <a className="brand" href="/">
           <span className="brand-mark">
-            <Layers size={22} />
+            <CivicMark />
           </span>
           CivicLens<span className="brand-period">.</span>
         </a>
-        <div className="workspace-label">CIVIC INTELLIGENCE</div>
+        <div className="workspace-label">THE CITY, IN FOCUS</div>
         <div className="city-select">
           <span className="city-icon">
             <MapPin size={17} />
@@ -180,7 +188,10 @@ export default function Dashboard() {
               aria-current={view === name ? "page" : undefined}
               title={name}
               className={view === name ? "nav-item active" : "nav-item"}
-              onClick={() => setView(name)}
+              onClick={() => {
+                setView(name);
+                window.scrollTo({ top: 0, behavior: "auto" });
+              }}
               key={name}
             >
               <Icon size={18} />
@@ -190,19 +201,17 @@ export default function Dashboard() {
           ))}
         </nav>
         <div className="sidebar-note">
-          <span className="note-icon">
-            <Fingerprint size={27} />
-          </span>
-          <strong>Your city. Your say.</strong>
-          <p>A photo, a voice note, a small observation. Make it count.</p>
+          <span className="note-index">↗</span>
+          <strong>Start with your street.</strong>
+          <p>Something needs attention? Put it on the record.</p>
           <button onClick={() => setReporting(true)}>
-            Create a report <ArrowUpRight size={16} />
+            New report <Plus size={16} />
           </button>
         </div>
         <div className="sidebar-bottom">
           <span className="avatar">BL</span>
           <span>
-            Bengaluru workspace<small>Evidence-led civic platform</small>
+            Bengaluru workspace<small>Public records · private reports</small>
           </span>
           <ShieldCheck size={16} />
         </div>
@@ -210,7 +219,7 @@ export default function Dashboard() {
       <main id="main-content" tabIndex={-1}>
         <header className="topbar">
           <a className="mobile-brand" href="/">
-            <Layers size={21} />
+            <CivicMark />
             CivicLens<span>.</span>
           </a>
           <div className="breadcrumb">
@@ -220,10 +229,10 @@ export default function Dashboard() {
           <div className="top-actions">
             <ThemeControl />
             <span className="public-label">
-              <span /> Public records. Private reports.
+              <span /> Public archive
             </span>
             <a href={sourceUrl} target="_blank" rel="noreferrer">
-              Source transparency <ArrowUpRight size={14} />
+              About the data <ArrowUpRight size={14} />
             </a>
           </div>
         </header>
@@ -231,7 +240,7 @@ export default function Dashboard() {
           <div className="page-heading">
             <div>
               <div className="eyebrow">
-                <span /> BENGALURU CIVIC OBSERVATORY
+                <span /> BENGALURU / PUBLIC CIVIC RECORDS
               </div>
               <h1>
                 {heading.title}
@@ -241,13 +250,9 @@ export default function Dashboard() {
               <p>{heading.description}</p>
             </div>
             <div className="hero-action">
-              <div className="hero-coordinate">
-                <Compass size={36} strokeWidth={1} />
-                <span>
-                  12.9716° N<br />
-                  77.5946° E
-                </span>
-              </div>
+              <span className="hero-edition">
+                BENGALURU / KA <span>12.9716° N · 77.5946° E</span>
+              </span>
               <div className="hero-buttons">
                 <button className="primary" onClick={() => setReporting(true)}>
                   <Plus size={18} /> Report an issue <ArrowUpRight size={17} />
@@ -275,12 +280,8 @@ export default function Dashboard() {
               <Database size={17} />
             </div>
             <div>
-              <strong>Real records. Clear provenance.</strong>
-              <span>
-                {" "}
-                Sahaaya civic grievances · historical public dataset · original
-                statuses preserved
-              </span>
+              <strong>Sahaaya public archive</strong>
+              <span> Historical records · original source statuses</span>
             </div>
             <a href={sourceUrl} target="_blank" rel="noreferrer">
               View source <ArrowUpRight size={14} />
@@ -295,31 +296,24 @@ export default function Dashboard() {
             <section className="stat-grid" aria-label="Dataset metrics">
               {[
                 {
-                  label: "Imported grievances",
+                  label: "Public grievances",
                   value: data?.total,
                   icon: FileText,
-                  note: "Records in this imported window",
+                  note: "Records in the current archive import",
                   color: "blue",
-                },
-                {
-                  label: "Source marked closed",
-                  value: data?.closed,
-                  icon: Check,
-                  note: "Official source status · not field verified",
-                  color: "green",
                 },
                 {
                   label: "Distinct ward labels",
                   value: data?.wards,
                   icon: MapPin,
-                  note: "Source labels, not current official ward count",
+                  note: "Source labels, not the current ward count",
                   color: "purple",
                 },
                 {
                   label: "Issue categories",
                   value: data?.categories.length,
                   icon: Layers,
-                  note: "Categories reported in the dataset",
+                  note: "From streetlights to solid waste",
                   color: "orange",
                 },
               ].map(({ label, value, icon: Icon, note, color }) => (
@@ -397,19 +391,13 @@ export default function Dashboard() {
                       <div className="panel-heading">
                         <div>
                           <span className="section-kicker">
-                            THE CITY AT A GLANCE
+                            THE GROUND VIEW
                           </span>
-                          <h2>
-                            City pulse{" "}
-                            <span className="subtle-tag">Bengaluru</span>
-                          </h2>
-                          <p>
-                            A geographic view of your city’s civic
-                            infrastructure
-                          </p>
+                          <h2>One city. Many neighbourhoods.</h2>
+                          <p>Explore Bengaluru and the streets around you.</p>
                         </div>
                         <span className="map-context">
-                          <span /> Geographic context
+                          <span /> City context
                         </span>
                       </div>
                       <div className="map-wrap">
@@ -424,9 +412,8 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="map-legend">
-                          <span className="legend-dot" />
-                          Archive records have ward names, not exact
-                          coordinates. No issue pins are inferred.
+                          <ShieldCheck size={14} />
+                          Ward-level archive. No inferred issue pins.
                         </div>
                       </div>
                     </section>
@@ -434,13 +421,26 @@ export default function Dashboard() {
                       <div className="panel-heading">
                         <div>
                           <span className="section-kicker">
-                            PATTERNS IN THE ARCHIVE
+                            THE BIGGER PICTURE
                           </span>
-                          <h2>What’s being reported</h2>
-                          <p>Category distribution · imported records</p>
+                          <h2>What’s in the archive?</h2>
                         </div>
-                        <Activity size={17} />
                       </div>
+                      {data && data.total > 0 && data.categories[0] && (
+                        <div className="category-insight">
+                          <strong>
+                            {(
+                              (data.categories[0].count / data.total) *
+                              100
+                            ).toFixed(1)}
+                            <span>%</span>
+                          </strong>
+                          <p>
+                            of imported reports concern{" "}
+                            <b>{data.categories[0].name.toLowerCase()}</b>.
+                          </p>
+                        </div>
+                      )}
                       <div className="category-bars">
                         {data?.categories.slice(0, 5).map((c, i) => (
                           <button
@@ -479,7 +479,7 @@ export default function Dashboard() {
                       </div>
                       <div className="breakdown-footer">
                         <ShieldCheck size={16} />
-                        <span>Counts are calculated from the database.</span>
+                        <span>Imported records · not a live incident feed</span>
                       </div>
                     </section>
                   </div>
@@ -487,20 +487,16 @@ export default function Dashboard() {
                 <section className="panel issues-panel" id="issue-records">
                   <div className="panel-heading">
                     <div>
-                      <span className="section-kicker">
-                        THE ORIGINAL RECORD
-                      </span>
+                      <span className="section-kicker">OPEN RECORDS</span>
                       <h2>
                         {view === "Accountability"
                           ? "Source status & review trail"
-                          : "Explore the reports"}{" "}
+                          : "Explore the archive."}{" "}
                         <span className="count-pill">
-                          {matched.toLocaleString("en-IN")}
+                          {data ? matched.toLocaleString("en-IN") : "—"}
                         </span>
                       </h2>
-                      <p>
-                        Original civic records, with context you can inspect.
-                      </p>
+                      <p>Every entry has a source. Take a closer look.</p>
                     </div>
                     <button
                       className="text-button"
@@ -513,6 +509,40 @@ export default function Dashboard() {
                     >
                       View all reports <ArrowRight size={15} />
                     </button>
+                  </div>
+                  <div
+                    className="archive-tabs"
+                    role="group"
+                    aria-label="Quick categories"
+                  >
+                    {[
+                      { label: "All records", value: "All categories" },
+                      { label: "Roads", value: "Road Maintenance(Engg)" },
+                      {
+                        label: "Waste",
+                        value: "Solid Waste (Garbage) Related",
+                      },
+                      { label: "Electrical", value: "Electrical" },
+                    ].map((item) => (
+                      <button
+                        key={item.value}
+                        aria-pressed={category === item.value}
+                        onClick={() => {
+                          setCategory(item.value);
+                          setPage(0);
+                        }}
+                      >
+                        {item.label}
+                        <span>
+                          {(item.value === "All categories"
+                            ? data?.total
+                            : data?.categories.find(
+                                (c) => c.name === item.value,
+                              )?.count
+                          )?.toLocaleString("en-IN") ?? "—"}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                   <div className="table-toolbar">
                     <label className="search-box">
@@ -538,7 +568,9 @@ export default function Dashboard() {
                       </select>
                     </label>
                     <span className="table-window" aria-live="polite">
-                      {matched.toLocaleString("en-IN")} matching records
+                      {data
+                        ? `${matched.toLocaleString("en-IN")} matching records`
+                        : "Loading records…"}
                     </span>
                     <div
                       className="layout-control"
@@ -686,7 +718,7 @@ export default function Dashboard() {
                       Previous
                     </button>
                     <span role="status" aria-live="polite">
-                      {searchBusy
+                      {searchBusy || !data
                         ? "Loading…"
                         : `Page ${page + 1} of ${Math.max(1, Math.ceil(matched / 8))}`}
                     </span>
@@ -718,49 +750,16 @@ export default function Dashboard() {
                 {view === "Overview" && (
                   <ReportingGuide onReport={() => setReporting(true)} />
                 )}
-                <section className="bottom-grid">
-                  <div className="principle-card">
-                    <span className="principle-icon">
-                      <Sparkles size={21} />
-                    </span>
-                    <div>
-                      <h3>Priority with a reason.</h3>
-                      <p>
-                        Evidence-led AI triage, explicit uncertainty, and a
-                        human review before decisions become claims.
-                      </p>
-                      <span className="capability-tag">
-                        {data?.configured.ai
-                          ? "Live AI configured"
-                          : "Live AI awaits API configuration"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="principle-card">
-                    <span className="principle-icon green">
-                      <ShieldCheck size={21} />
-                    </span>
-                    <div>
-                      <h3>Accountability, by design.</h3>
-                      <p>
-                        Source closure and citizen verification are separate. An
-                        official status is never presented as a verified repair.
-                      </p>
-                      <a href={sourceUrl} target="_blank" rel="noreferrer">
-                        Understand the source <ArrowUpRight size={13} />
-                      </a>
-                    </div>
-                  </div>
-                </section>
               </>
             )}
           </div>
           <footer className="page-footer">
             <span>
-              <Layers size={14} /> CivicLens · Built for a more accountable
-              Bengaluru.
+              <CivicMark /> CivicLens / Bengaluru
             </span>
-            <span>Evidence first. People always.</span>
+            <a href={sourceUrl} target="_blank" rel="noreferrer">
+              Public data, with provenance <ArrowUpRight size={14} />
+            </a>
           </footer>
         </div>
       </main>

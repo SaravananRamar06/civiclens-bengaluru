@@ -124,7 +124,9 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           </>
         )}
       </div>
-      <p className="muted">Showing up to 100 recent reports in this view.</p>
+      {reports.length > 0 && (
+        <p className="muted">Showing up to 100 recent reports in this view.</p>
+      )}
       {message && (
         <div className="notice" role="status">
           {message}
@@ -138,8 +140,8 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           <FileText size={27} />
           <h3>Your first report starts here.</h3>
           <p>
-            Use “Report an issue” to record a genuine Bengaluru civic issue. No
-            example reports have been added.
+            Report a civic issue in Bengaluru. Your submissions and their review
+            history will appear here.
           </p>
           <button className="primary" onClick={onReport}>
             <Plus size={16} />

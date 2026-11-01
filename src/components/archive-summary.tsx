@@ -76,14 +76,14 @@ export function ReportingGuide({ onReport }: { onReport: () => void }) {
   return (
     <section className="reporting-guide">
       <div>
-        <span className="section-kicker">SMALL ACTION. VISIBLE PROGRESS.</span>
+        <span className="section-kicker">START WITH WHAT YOU SEE</span>
         <h2>
-          From a street-level issue
+          A problem on your street?
           <br />
-          to a traceable report.
+          Put it on the record.
         </h2>
-        <button className="text-button" onClick={onReport}>
-          Make your first report <ArrowUpRight size={16} />
+        <button className="primary" onClick={onReport}>
+          Report an issue <ArrowUpRight size={16} />
         </button>
       </div>
       <ol>
@@ -91,27 +91,21 @@ export function ReportingGuide({ onReport }: { onReport: () => void }) {
           <span>01</span>
           <div>
             <strong>Capture the issue</strong>
-            <p>
-              Describe what you see. Add a location, photo, or voice recording.
-            </p>
+            <p>Describe it, locate it, and attach your evidence.</p>
           </div>
         </li>
         <li>
           <span>02</span>
           <div>
             <strong>Follow the review</strong>
-            <p>
-              A clear priority, a project review queue, and a recorded history.
-            </p>
+            <p>Check the assessment and the recorded review history.</p>
           </div>
         </li>
         <li>
           <span>03</span>
           <div>
             <strong>Confirm the outcome</strong>
-            <p>
-              Evidence comes first. Cloud citizens confirm closure or reopen.
-            </p>
+            <p>In cloud mode, confirm a repair or reopen your report.</p>
           </div>
         </li>
       </ol>

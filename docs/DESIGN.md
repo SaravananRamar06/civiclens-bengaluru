@@ -9,6 +9,8 @@ The frontend is an original Next.js implementation, informed by the four design 
 
 ## Implementation
 
+- The city heading uses large Manrope typography, with a custom focus-mark identity, charcoal navigation, stone surfaces, and a vermilion action colour. Three archive metrics replace the previous four-card block.
+- A larger map and a category panel form the main workspace. The leading category share is calculated from the database. Category tabs, search, and list/card controls operate on the same archive API.
 - Shared semantic colour tokens cover light and dark surfaces, text, borders, status colours, map controls, and dialogs.
 - Light, dark, and system preferences persist locally and synchronize across tabs. An inline bootstrap resolves appearance before first paint.
 - Report cards and the table use the same live archive query and open the same evidence drawer. Small screens start with cards.
@@ -16,3 +18,7 @@ The frontend is an original Next.js implementation, informed by the four design 
 - The dark map filter applies only to the map canvas; uploaded evidence is displayed without colour alteration.
 
 No additional UI framework or animation dependency is required. Icons use the existing Lucide library; motion uses CSS.
+
+## Data integrity
+
+The application never seeds citizen reports, resolution histories, or map pins. Public entries come from the imported Sahaaya archive, with their source and historical status identified. Metrics and category shares are derived at runtime. A new citizen workspace has an empty report list. Test records are confined to isolated verification databases and never shown in the app.
