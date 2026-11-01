@@ -78,6 +78,8 @@ try {
   check((await signIn(roadsOfficer.email,roadsOfficer.password)).status,200,"Officer signs in with a password");
   check((await signIn(roadsOfficer.email,"wrong-password")).status,401,"Wrong password is refused");
   check((await signIn(stranger.email,stranger.password)).status,403,"An account with no staff role cannot use staff sign-in");
+  check((await call("/api/archive?q="+encodeURIComponent("' OR 1=1--"))).status,200,"Archive search survives punctuation");
+  check((await call("/api/archive?page=9999")).status,200,"Archive page past the end is empty, not an error");
   check((await transition(report.id,owner,"Acknowledged")).status,403,"Citizen cannot acknowledge own report in cloud mode");
   check((await transition(report.id,operator,"Acknowledged")).status,200,"Operator acknowledges report");
   check((await transition(report.id,operator,"In progress")).status,200,"Operator starts review work");

@@ -1637,3 +1637,14 @@ time {
 .legal ul {
   margin-bottom: 12px;
 }
+.result > .civic-stamp {
+  right: 56px;
+}
+.result-severity {
+  margin-right: 230px;
+}
+@media (max-width: 760px) {
+  .result-severity {
+    margin-right: 40px;
+  }
+}

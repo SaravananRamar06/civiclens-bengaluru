@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         .order("reported_at", { ascending: false });
       if (category && category !== "All categories")
         query = query.eq("category", category);
-      const search = q.replace(/[,().\\%_]/g, "");
+      const search = q.replace(/[^\p{L}\p{N}\s/-]/gu, " ").trim().split(/\s+/).join("%");
       if (search)
         query = query.or(
           `detail.ilike.%${search}%,ward.ilike.%${search}%,id.ilike.%${search}%,category.ilike.%${search}%`,
@@ -32,6 +32,9 @@ export async function GET(request: Request) {
         page * size,
         (page + 1) * size - 1,
       );
+      // PostgREST rejects a range past the last row, which is simply an empty page.
+      if (error?.code === "PGRST103")
+        return Response.json({ reports: [], matched: 0, page, size });
       if (error) throw error;
       return Response.json({
         reports: data.map((r) => ({
