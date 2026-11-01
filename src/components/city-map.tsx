@@ -41,6 +41,24 @@ export default function CityMap() {
       );
       map.on("load", async () => {
         try {
+          const open = await fetch("/api/public-reports").then((r) => (r.ok ? r.json() : null));
+          for (const report of open?.reports ?? []) {
+            const pin = document.createElement("span");
+            pin.className = "public-pin";
+            pin.dataset.severity = report.severity;
+            new maplibregl.Marker({ element: pin })
+              .setLngLat([report.longitude, report.latitude])
+              .setPopup(
+                new maplibregl.Popup().setText(
+                  `${report.category}. ${report.severity} severity. ${report.status}. Routed to ${report.authority}.`,
+                ),
+              )
+              .addTo(map);
+          }
+        } catch {
+          /* The map stays useful without the public pins. */
+        }
+        try {
           const session = await fetch("/api/session").then((r) => r.json());
           if (!session.signedIn) return;
           const response = await fetch("/api/reports");
@@ -53,12 +71,12 @@ export default function CityMap() {
             )
               continue;
             const marker = new maplibregl.Marker({
-              color: report.priority === "Critical" ? "#c85454" : "#177a6b",
+              color: report.priority === "Critical" ? "#b8123a" : "#2f27c9",
             })
               .setLngLat([report.longitude, report.latitude])
               .setPopup(
                 new maplibregl.Popup().setText(
-                  `Your private report: ${report.category} · ${report.status}`,
+                  `Your report: ${report.category}, ${report.status}`,
                 ),
               );
             marker.addTo(map);

@@ -10,7 +10,7 @@ export async function GET() {
       appOrigin();
       stage = "schema";
       const version = await publicDatabase().rpc("civic_schema_version");
-      if (version.error || version.data !== 4) throw Error("Apply cloud migrations");
+      if (version.error || version.data !== 5) throw Error("Apply cloud migrations");
       stage = "archive";
       const { error, count } = await publicDatabase()
         .from("civic_sources")

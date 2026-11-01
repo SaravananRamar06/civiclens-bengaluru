@@ -18,12 +18,13 @@ import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
 import CivicMark from "./civic-mark";
 import CityWall from "./city-wall";
+import LiveAccountability from "./live-accountability";
 import CivicStamp, { StampTexture } from "./civic-stamp";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
-const views = ["City", "Records", "Closed or fixed?", "My reports", "Sources"];
+const views = ["City", "Accountability", "Records", "My reports", "Sources"];
 const headings: Record<string, string> = {
   Records: "Every complaint, as it was filed.",
-  "Closed or fixed?": "Closed, on whose word?",
+  Accountability: "Closed, on whose word?",
   "My reports": "Your reports.",
   Sources: "Where this comes from.",
 };
@@ -153,12 +154,17 @@ export default function Dashboard() {
               <div className="hero-foot">
                 <p>
                   {data
-                    ? `This archive holds ${data.total.toLocaleString("en-IN")} complaints filed in Bengaluru ${archivePeriod(data.dateRange)}. The source marks ${data.closed.toLocaleString("en-IN")} of them closed. It can’t tell you how many were repaired. CivicLens can, one report at a time.`
+                    ? `This archive holds ${data.total.toLocaleString("en-IN")} complaints filed in Bengaluru ${archivePeriod(data.dateRange)}. The source marks ${data.closed.toLocaleString("en-IN")} of them closed. It can’t tell you how many were repaired. So send a photo or a voice note. AI rates the severity, the right authority gets it, and the whole city can see what happens next.`
                     : "Loading the Bengaluru complaint archive…"}
                 </p>
-                <button className="secondary" onClick={() => setView("Records")}>
-                  Browse the records
-                </button>
+                <div className="hero-actions">
+                  <button className="primary" onClick={openReport}>
+                    Report an issue
+                  </button>
+                  <button className="secondary" onClick={() => setView("Accountability")}>
+                    See who’s accountable
+                  </button>
+                </div>
               </div>
             </section>
             <CityWall onOpen={setSelected} onReady={() => setStamped(true)} />
@@ -166,8 +172,8 @@ export default function Dashboard() {
             <section className="street" aria-label="Map of Bengaluru">
               <CityMap />
               <p>
-                The archive has ward names, not addresses, so it draws no pins.
-                Your own reports appear here, visible only to you.
+                Every report filed here, at a rough location. Solid pins are
+                critical. The archive has ward names only, so it draws no pins.
               </p>
             </section>
           </>
@@ -212,8 +218,9 @@ export default function Dashboard() {
                   Read the dataset and its licence
                 </a>
               </section>
-            ) : view === "Closed or fixed?" ? (
+            ) : view === "Accountability" ? (
               <>
+                <LiveAccountability onReport={openReport} />
                 <SourceStatus data={data} />
                 <ArchiveInsights />
               </>

@@ -10,7 +10,7 @@ type Report = {
   status: string;
   priority: string;
   priorityReason?: string;
-  reviewQueue?: string;
+  authority?: string;
   analysis?: LocalAnalysis;
   latitude: number;
   longitude: number;
@@ -75,8 +75,8 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
       <div className="report-tools">
         <p>
           {mode === "local-receipt"
-            ? "Saved privately in this browser. Review steps here are not government actions."
-            : "Private to you and the project’s reviewers. You confirm every repair. Nothing here is a government action."}
+            ? "Saved in this browser. A summary appears on the public dashboard. Review steps here are not government actions."
+            : "Your words, evidence and exact location are private. A summary appears on the public dashboard. You confirm every repair."}
         </p>
         <button className="text-button" onClick={refresh}>
           Refresh
@@ -281,7 +281,7 @@ function LocalCase({
       <StampTrail status={r.status} />
       <p>{r.description}</p>
       <p className="muted">
-        {r.priorityReason} Queue: {r.reviewQueue || "General civic review"}. Tracking ID: {r.id}
+        Routed to {r.authority || "City corporation: general"}. {r.priorityReason} Tracking ID: {r.id}
       </p>
       <div className="evidence-grid">
         {r.evidence?.map((e) => {

@@ -7,7 +7,22 @@ export async function GET(request: Request) {
   const report = localMode() ? (owner ? ownedReport(id, owner) : null) : await readCloudReport(id, await cloudIdentity());
   if (!report)
     return Response.json({ error: "Report unavailable" }, { status: 404 });
-  const text = `CivicLens Bengaluru — handoff packet\n\nTracking ID: ${report.id}\nReported: ${report.created_at}\nCategory: ${report.category}\nProject queue: ${report.reviewQueue || "General civic review"}\nProject review: ${report.status}\nPriority: ${report.priority} (provisional)\n\n${report.description}\n\nEvidence attachments: ${report.evidence.length}\n\nThis packet was prepared by the project operator. No government delivery, acceptance or field repair is claimed. Exact coordinates and private attachments are excluded from this export.\n`;
+  const text = [
+    "CivicLens Bengaluru handoff packet",
+    "",
+    `To: ${report.authority || "City corporation: general"}`,
+    `Tracking ID: ${report.id}`,
+    `Reported: ${report.created_at}`,
+    `Category: ${report.category}`,
+    `Severity: ${report.priority} (provisional, needs human verification)`,
+    `Status: ${report.status}`,
+    "",
+    report.description,
+    "",
+    `Evidence attachments: ${report.evidence?.length ?? 0}`,
+    "The reporter’s identity, exact location and private attachments are not included.",
+    "CivicLens is an independent project. This packet was prepared for handoff and has not been accepted by any authority.",
+  ].join("\n");
   return new Response(text, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",

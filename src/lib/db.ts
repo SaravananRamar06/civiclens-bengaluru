@@ -4,7 +4,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { publicDatabase } from "./supabase";
 import { localMode } from "./config";
-import type { CivicReport, DashboardData } from "./types";
+import type { DashboardData } from "./types";
 let database: DatabaseSync | undefined;
 export function db() {
   if (!database) {
@@ -17,73 +17,43 @@ export function db() {
   }
   return database;
 }
-function normalize(payload: string): CivicReport {
-  const r = JSON.parse(payload);
-  return {
-    id: String(r["Complaint ID"]),
-    category: r.Category || "Other",
-    detail: r["Sub Category"] || "Unspecified",
-    ward: r["Ward Name"] || "Location unavailable",
-    date: r["Grievance Date"] || "",
-    status: r["Grievance Status"] || "Unknown",
-    remarks: "Source remarks are omitted from the public view.",
-    source: "Sahaaya archive",
-    priority: "Unassessed",
-  };
-}
 export async function dashboard(): Promise<DashboardData> {
   if (!localMode()) {
     const client = publicDatabase();
-    const [stats, categories, records] = await Promise.all([
+    const [stats, categories] = await Promise.all([
       client.rpc("civic_source_stats"),
       client.rpc("civic_category_stats"),
-      client
-        .from("civic_sources")
-        .select("id,category,detail,ward,reported_at,source_status")
-        .order("reported_at", { ascending: false })
-        .limit(100),
     ]);
-    if (stats.error || categories.error || records.error)
+    if (stats.error || categories.error)
       throw Error("Hosted civic data unavailable");
     return {
       ...stats.data,
       categories: categories.data,
-      reports: records.data.map((r) => ({
-        id: r.id,
-        category: r.category,
-        detail: r.detail,
-        ward: r.ward,
-        date: r.reported_at,
-        status: r.source_status,
-        remarks: "Source remarks are omitted from the public view.",
-        source: "Sahaaya archive",
-        priority: "Unassessed",
-      })),
       configured: { auth: true, ai: !!process.env.GEMINI_API_KEY },
     };
   }
-  const records = db().prepare("SELECT payload FROM source_records").all() as {
-    payload: string;
-  }[];
-  const reports = records.map((r) => normalize(r.payload));
+  const records = (
+    db().prepare("SELECT payload FROM source_records").all() as { payload: string }[]
+  ).map((row) => JSON.parse(row.payload));
   const categories = new Map<string, number>();
-  for (const r of reports)
-    categories.set(r.category, (categories.get(r.category) || 0) + 1);
-  const dates = reports
-    .map((r) => r.date)
+  for (const record of records) {
+    const name = record.Category || "Other";
+    categories.set(name, (categories.get(name) || 0) + 1);
+  }
+  const dates = records
+    .map((record) => record["Grievance Date"])
     .filter(Boolean)
     .sort();
   const sync = db()
     .prepare("SELECT fetched_at FROM sync_log ORDER BY id DESC LIMIT 1")
     .get() as { fetched_at: string } | undefined;
   return {
-    reports: reports.slice(0, 100),
-    total: reports.length,
-    closed: reports.filter((r) => /^closed$/i.test(r.status)).length,
-    wards: new Set(reports.map((r) => r.ward)).size,
+    total: records.length,
+    closed: records.filter((record) => /^closed$/i.test(record["Grievance Status"] || "")).length,
+    wards: new Set(records.map((record) => record["Ward Name"] || "Location unavailable")).size,
     categories: [...categories]
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count),
+      .sort((x, y) => y.count - x.count),
     fetchedAt: sync?.fetched_at || null,
     dateRange: dates.length
       ? { from: dates[0], to: dates[dates.length - 1] }

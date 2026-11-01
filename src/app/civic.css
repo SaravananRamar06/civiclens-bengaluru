@@ -1140,3 +1140,110 @@ summary {
     animation-duration: 3s;
   }
 }
+
+/* Hero actions and report evidence. */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.evidence-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.voice-button {
+  width: 100%;
+  margin-top: 4px;
+  min-height: 44px;
+}
+.voice-button[data-recording] {
+  background: var(--alert);
+  border-color: var(--alert);
+  color: var(--sheet);
+}
+.voice-preview {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+/* Public record. */
+.live-record {
+  margin-bottom: 64px;
+}
+.live-summary {
+  margin-top: 12px;
+  font: 800 clamp(1.6rem, 3.6vw, 2.5rem)/1.05 var(--font-display), sans-serif;
+}
+.table-frame {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+.authority-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+.authority-table th {
+  padding: 8px 12px 8px 0;
+  border-bottom: 2px solid var(--ink);
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.authority-table td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.live-record h3 {
+  margin: 28px 0 8px;
+  font-size: 1.05rem;
+}
+.public-feed {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.public-feed li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1.4fr) 170px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+[data-severity="Critical"] {
+  color: var(--alert);
+}
+.public-pin {
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--stamp);
+  border-radius: 50%;
+  background: var(--sheet);
+  cursor: pointer;
+}
+.public-pin[data-severity="Critical"] {
+  border-color: var(--alert);
+  background: var(--alert);
+}
+@media (max-width: 760px) {
+  .hero-actions,
+  .hero-actions button {
+    width: 100%;
+  }
+  .public-feed li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: start;
+    gap: 2px 12px;
+  }
+  .public-feed li span:nth-child(3) {
+    grid-column: 1;
+    color: var(--ink-soft);
+  }
+  .public-feed li .status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

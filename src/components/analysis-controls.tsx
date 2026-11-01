@@ -5,6 +5,8 @@ export type LocalAnalysis = {
   transcript: string;
   uncertainty: string[];
   model: string;
+  severity?: string;
+  severityReason?: string;
   observations?: {
     claim: string;
     evidenceId: string;
@@ -61,7 +63,7 @@ export default function AnalysisControls({
             }
           }}
         >
-          {busy ? "Analysing evidence…" : "Analyse with AI"}
+          {busy ? "Rating severity…" : "Rate severity with AI"}
         </button>
       </div>
       {message && (
@@ -72,6 +74,11 @@ export default function AnalysisControls({
       {analysis && (
         <div className="analysis-result">
           <strong>Provisional AI assessment from {analysis.model}</strong>
+          {analysis.severity && (
+            <p>
+              {analysis.severity} severity. {analysis.severityReason}
+            </p>
+          )}
           <p>{analysis.summary}</p>
           {Boolean(analysis.observations?.length) && (
             <div className="analysis-observations">
