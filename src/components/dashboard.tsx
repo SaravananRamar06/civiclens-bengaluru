@@ -63,7 +63,7 @@ export default function Dashboard() {
       .then((s) => s.role && setStaff({ role: s.role, authority: s.authority }))
       .catch(() => {});
   }, []);
-  const tabs = staff ? [{ name: "Authority desk", Icon: Inbox }, ...views.slice(0, 3), views[4]] : views;
+  const tabs = staff ? [{ name: "Authority desk", Icon: Inbox }, ...views] : views;
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [view]);

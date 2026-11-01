@@ -83,7 +83,7 @@ City corporations sit under the Greater Bengaluru Authority, which replaced the 
 
 ### Roles and access
 
-Access is enforced by row-level security in the database, so it holds even for direct API calls.
+Officers request access with a work email from the page footer, and an administrator approves each request. Access is enforced by row-level security in the database, so it holds even for direct API calls.
 
 | Role | Can see | Can do |
 |---|---|---|
