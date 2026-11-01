@@ -61,6 +61,8 @@ button:disabled {
   border-right: 1px solid #263e35;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #52705f transparent;
 }
 .brand {
   color: #fff;
