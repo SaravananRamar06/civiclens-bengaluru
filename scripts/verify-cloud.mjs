@@ -78,6 +78,13 @@ try {
   check((await signIn(roadsOfficer.email,roadsOfficer.password)).status,200,"Officer signs in with a password");
   check((await signIn(roadsOfficer.email,"wrong-password")).status,401,"Wrong password is refused");
   check((await signIn(stranger.email,stranger.password)).status,403,"An account with no staff role cannot use staff sign-in");
+  const requestAccess = (email,authority="BWSSB: water and sewerage") => fetch(origin+"/api/staff/signup",{method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},body:JSON.stringify({email,password:randomUUID(),authority})});
+  check((await requestAccess("someone@gmail.com")).status,400,"Personal email cannot request staff access");
+  check((await requestAccess("isolated-"+randomUUID()+"@example.test","Everything")).status,400,"Unknown authority is refused");
+  const applicantEmail = "isolated-"+randomUUID()+"@example.test";
+  check((await requestAccess(applicantEmail)).status,202,"Work email can request staff access");
+  const applicant = (await admin.auth.admin.listUsers({perPage:1000})).data.users.find(u=>u.email===applicantEmail);
+  check((await admin.from("civic_operators").select("user_id").eq("user_id",applicant.id).maybeSingle()).data,null,"A request grants no staff role");
   check((await call("/api/archive?q="+encodeURIComponent("' OR 1=1--"))).status,200,"Archive search survives punctuation");
   check((await call("/api/archive?page=9999")).status,200,"Archive page past the end is empty, not an error");
   check((await transition(report.id,owner,"Acknowledged")).status,403,"Citizen cannot acknowledge own report in cloud mode");
