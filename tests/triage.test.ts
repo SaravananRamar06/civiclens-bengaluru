@@ -23,3 +23,26 @@ describe("Bengaluru location validation", () => {
     expect(validBengaluruPoint(37.77, -122.4)).toBe(false);
   });
 });
+describe("priority policy phrasing", () => {
+  it.each([
+    "Two open manholes on 5th Main road",
+    "Open man hole on the footpath",
+    "Manhole cover is missing near the school",
+    "Live wires hanging at the bus stop",
+    "Wall collapsed onto the pavement",
+  ])("treats %s as critical", (text) =>
+    expect(priorityFor(text).priority).toBe("Critical"));
+  it.each([
+    "Street is flooded after rain",
+    "Flooding in the underpass",
+    "Sewage is overflowing onto the road",
+    "The road is blocked by debris",
+  ])("treats %s as high", (text) =>
+    expect(priorityFor(text).priority).toBe("High"));
+  it.each([
+    "Many potholes near the school",
+    "Street lights not working in our lane",
+    "Streetlight not working for a week",
+  ])("treats %s as medium", (text) =>
+    expect(priorityFor(text).priority).toBe("Medium"));
+});

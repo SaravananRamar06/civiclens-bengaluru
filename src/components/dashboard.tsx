@@ -37,7 +37,7 @@ const CityMap = dynamic(() => import("./city-map"), {
 });
 import ReportDialog from "./report-dialog";
 import MyReports from "./my-reports";
-import { ReportingGuide, SourceStatus } from "./archive-summary";
+import { ArchiveInsights, ReportingGuide, SourceStatus } from "./archive-summary";
 import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
 import CivicMark from "./civic-mark";
@@ -73,15 +73,17 @@ export default function Dashboard() {
   }, []);
   const [reports, setReports] = useState<CivicReport[]>([]),
     [page, setPage] = useState(0),
-    [matched, setMatched] = useState(0),
-    [searchBusy, setSearchBusy] = useState(false);
+    [matched, setMatched] = useState<number | null>(null),
+    [searchBusy, setSearchBusy] = useState(true),
+    [archiveRetry, setArchiveRetry] = useState(0);
   useEffect(() => {
     setPage(0);
   }, [query, category]);
   useEffect(() => {
     const controller = new AbortController();
+    setSearchBusy(true);
+    setMatched(null);
     const timer = setTimeout(() => {
-      setSearchBusy(true);
       fetch(
         "/api/archive?" +
           new URLSearchParams({ q: query, category, page: String(page) }),
@@ -104,7 +106,7 @@ export default function Dashboard() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, category, page]);
+  }, [query, category, page, archiveRetry]);
   const titles: Record<
     string,
     { title: string; accent: string; description: string }
@@ -278,7 +280,15 @@ export default function Dashboard() {
           </div>
           {error && (
             <div className="notice error">
-              {error} <button onClick={refresh}>Try again</button>
+              {error}{" "}
+              <button
+                onClick={() => {
+                  refresh();
+                  setArchiveRetry((attempt) => attempt + 1);
+                }}
+              >
+                Try again
+              </button>
             </div>
           )}
           {view !== "My reports" && (
@@ -373,7 +383,10 @@ export default function Dashboard() {
             ) : (
               <>
                 {view === "Accountability" ? (
-                  <SourceStatus data={data} />
+                  <>
+                    <SourceStatus data={data} />
+                    <ArchiveInsights />
+                  </>
                 ) : (
                   <div className="workspace-grid">
                     <section className="panel map-panel">
@@ -482,7 +495,9 @@ export default function Dashboard() {
                           ? "Source status & review trail"
                           : "Explore the archive."}{" "}
                         <span className="count-pill">
-                          {data ? matched.toLocaleString("en-IN") : "—"}
+                          {matched === null
+                            ? "—"
+                            : matched.toLocaleString("en-IN")}
                         </span>
                       </h2>
                       <p>Every entry has a source. Take a closer look.</p>
@@ -557,9 +572,11 @@ export default function Dashboard() {
                       </select>
                     </label>
                     <span className="table-window" aria-live="polite">
-                      {data
+                      {matched !== null
                         ? `${matched.toLocaleString("en-IN")} matching records`
-                        : "Loading records…"}
+                        : searchBusy
+                          ? "Loading records…"
+                          : "Records unavailable"}
                     </span>
                     <div
                       className="layout-control"
@@ -693,7 +710,7 @@ export default function Dashboard() {
                     {!reports.length && !searchBusy && (
                       <div className="empty">
                         {data
-                          ? "No matching reports. Try another search or import real records."
+                          ? "No matching reports. Try another search or category."
                           : "Loading civic records…"}
                       </div>
                     )}
@@ -707,13 +724,19 @@ export default function Dashboard() {
                       Previous
                     </button>
                     <span role="status" aria-live="polite">
-                      {searchBusy || !data
+                      {searchBusy
                         ? "Loading…"
-                        : `Page ${page + 1} of ${Math.max(1, Math.ceil(matched / 8))}`}
+                        : matched === null
+                          ? "Unavailable"
+                          : `Page ${page + 1} of ${Math.max(1, Math.ceil(matched / 8))}`}
                     </span>
                     <button
                       className="text-button"
-                      disabled={(page + 1) * 8 >= matched || searchBusy}
+                      disabled={
+                        matched === null ||
+                        (page + 1) * 8 >= matched ||
+                        searchBusy
+                      }
                       onClick={() => setPage((p) => p + 1)}
                     >
                       Next
@@ -753,7 +776,11 @@ export default function Dashboard() {
         </div>
       </main>
       {selected && (
-        <CaseDrawer report={selected} onClose={() => setSelected(null)} />
+        <CaseDrawer
+          report={selected}
+          aiReady={!!data?.configured.ai && !!data?.configured.auth}
+          onClose={() => setSelected(null)}
+        />
       )}
       {reporting && (
         <ReportDialog
@@ -763,6 +790,7 @@ export default function Dashboard() {
             setView("My reports");
           }}
           configured={!!data?.configured.auth}
+          aiReady={!!data?.configured.ai}
         />
       )}
     </div>
@@ -770,9 +798,11 @@ export default function Dashboard() {
 }
 function CaseDrawer({
   report: r,
+  aiReady,
   onClose,
 }: {
   report: CivicReport;
+  aiReady: boolean;
   onClose: () => void;
 }) {
   const dialogRef = useDialog(onClose);
@@ -803,7 +833,11 @@ function CaseDrawer({
           {r.category} · {r.ward}
         </p>
         <div className="case-status">
-          <span className="status closed">Source: {r.status}</span>
+          <span
+            className={`status ${r.status.toLowerCase() === "closed" ? "closed" : "pending"}`}
+          >
+            Source: {r.status}
+          </span>
           <span className="review-status">Field verification unavailable</span>
         </div>
         <h3>Evidence & provenance</h3>
@@ -832,7 +866,7 @@ function CaseDrawer({
         </p>
         <button
           className="primary"
-          disabled={loading}
+          disabled={loading || !aiReady}
           onClick={async () => {
             setLoading(true);
             try {
@@ -889,7 +923,11 @@ function CaseDrawer({
           ) : (
             <Sparkles size={16} />
           )}
-          {analysisId ? "Check analysis status" : "Run live analysis"}
+          {!aiReady
+            ? "AI analysis unavailable"
+            : analysisId
+              ? "Check analysis status"
+              : "Run live analysis"}
         </button>
         {analysis && (
           <div className="analysis-result" role="status">

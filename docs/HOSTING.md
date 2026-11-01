@@ -2,6 +2,14 @@
 
 The supplied setup runs one Node.js 24 container behind an HTTPS reverse proxy. Supabase persists Auth, PostgreSQL/PostGIS, private evidence, analysis results and audit history. The optional archive-analysis workflow uses a persistent container volume. A Vercel account is not required.
 
+## Hosting on Vercel
+
+Link the repository to a Vercel project and add the Supabase integration, which supplies the database variables. Vercel runs the app in cloud mode automatically, derives the public origin from `VERCEL_PROJECT_PRODUCTION_URL`, and uses Node 24 from `package.json`. Only `GEMINI_API_KEY` must be added by hand. Set `APP_ORIGIN` as well if you attach a custom domain.
+
+After deploying, `/api/health` reports `status: ok`, or `failedAt` naming the failing stage: `configuration`, `schema` or `archive`.
+
+For reporting without Google, enable anonymous sign-ins in Supabase Auth. People then get a private guest session with no account; Google remains available once its provider is configured.
+
 ## 1. Apply the schema
 
 Use a Supabase project and apply all files in supabase/migrations in filename order. For a fresh project with the Supabase CLI:

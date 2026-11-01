@@ -6,7 +6,8 @@ export function supabaseConfig() {
   return { url, key };
 }
 export function appOrigin() {
-  const raw = process.env.APP_ORIGIN || (localMode() ? "http://127.0.0.1:3000" : "");
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const raw = process.env.APP_ORIGIN || (vercelHost ? "https://" + vercelHost : localMode() ? "http://127.0.0.1:3000" : "");
   if (!raw) throw Error("APP_ORIGIN is required for cloud authentication");
   const url = new URL(raw);
   if (!["https:", "http:"].includes(url.protocol) || url.origin !== raw || url.username || url.password)

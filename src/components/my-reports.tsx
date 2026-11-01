@@ -43,9 +43,12 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
     [message, setMessage] = useState(""),
     [mode, setMode] = useState(""),
     [isOperator, setIsOperator] = useState(false),
-    [review, setReview] = useState(false);
-  const refresh = () =>
-    fetch("/api/reports" + (review ? "?scope=review" : ""), {
+    [review, setReview] = useState(false),
+    [loaded, setLoaded] = useState(false),
+    [loading, setLoading] = useState(true);
+  const refresh = () => {
+    setLoading(true);
+    return fetch("/api/reports" + (review ? "?scope=review" : ""), {
       cache: "no-store",
     })
       .then(async (r) => {
@@ -55,11 +58,15 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
         setMode(body.mode);
         setIsOperator(body.isOperator);
         setMessage("");
+        setLoaded(true);
       })
       .catch((e) => {
         setReports([]);
         setMessage(e.message);
-      });
+        setLoaded(false);
+      })
+      .finally(() => setLoading(false));
+  };
   useEffect(() => {
     refresh();
   }, [review]);
@@ -78,7 +85,9 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
         <div>
           <h2>
             {review ? "Operator review queue" : "My reports"}{" "}
-            <span className="count-pill">{reports.length}</span>
+            <span className="count-pill">
+              {loaded && !loading ? reports.length : "—"}
+            </span>
           </h2>
           <p>
             {mode === "local-receipt"
@@ -135,7 +144,12 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           </button>
         </div>
       )}
-      {!reports.length && !message && (
+      {loading && (
+        <p className="empty" role="status">
+          <Loader2 size={16} className="spin" /> Loading your reports…
+        </p>
+      )}
+      {!loading && loaded && !reports.length && !message && (
         <div className="empty">
           <FileText size={27} />
           <h3>Your first report starts here.</h3>

@@ -1,5 +1,92 @@
+"use client";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import type { DashboardData } from "@/lib/types";
+import type { Insights } from "@/lib/insights";
+
+function InsightList({
+  title,
+  note,
+  items,
+}: {
+  title: string;
+  note: string;
+  items: Insights["wards"];
+}) {
+  const largest = items[0]?.total || 1;
+  return (
+    <div className="insight-list">
+      <h3>{title}</h3>
+      <p>{note}</p>
+      <ol>
+        {items.map((item) => (
+          <li key={item.name}>
+            <div className="insight-label">
+              <span>{item.name}</span>
+              <b>
+                {item.total.toLocaleString("en-IN")}
+                <small>
+                  {((item.closed / item.total) * 100).toFixed(0)}% closed
+                </small>
+              </b>
+            </div>
+            <div className="insight-track">
+              <span style={{ width: `${(item.total / largest) * 100}%` }}>
+                <i style={{ width: `${(item.closed / item.total) * 100}%` }} />
+              </span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+export function ArchiveInsights() {
+  const [insights, setInsights] = useState<Insights | null>(null),
+    [failed, setFailed] = useState(false);
+  useEffect(() => {
+    fetch("/api/insights")
+      .then((r) => {
+        if (!r.ok) throw Error();
+        return r.json();
+      })
+      .then(setInsights)
+      .catch(() => setFailed(true));
+  }, []);
+  return (
+    <section className="panel archive-insights">
+      <div className="panel-heading">
+        <div>
+          <span className="section-kicker">WHERE THE WORK SITS</span>
+          <h2>Which issues get closed, and where?</h2>
+          <p>
+            Computed live from the archive. The darker band is the share the
+            source marks closed, not verified repairs.
+          </p>
+        </div>
+      </div>
+      {insights ? (
+        <div className="insight-grid">
+          <InsightList
+            title="By category"
+            note="Largest categories in the archive"
+            items={insights.categories}
+          />
+          <InsightList
+            title="By ward label"
+            note="Source ward names with the most records"
+            items={insights.wards}
+          />
+        </div>
+      ) : (
+        <p className="empty">
+          {failed ? "Insights are unavailable right now." : "Loading insights…"}
+        </p>
+      )}
+    </section>
+  );
+}
 
 export function SourceStatus({ data }: { data: DashboardData | null }) {
   const total = data?.total || 0;

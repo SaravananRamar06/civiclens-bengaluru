@@ -5,7 +5,7 @@ import { analyzeEvidence } from "./evidence-analysis";
 export async function analyzeCloudReport(id: string) {
   const { client, user } = await cloudIdentity();
   if (!process.env.GEMINI_API_KEY || !process.env.SUPABASE_SECRET_KEY)
-    throw new ApiError("Live analysis requires GEMINI_API_KEY and SUPABASE_SECRET_KEY on the server. Your evidence remains saved.");
+    throw new ApiError("AI analysis is not switched on yet. Your report and evidence remain saved.");
   const { data: report, error } = await client.from("civic_reports").select("id,description,category,civic_evidence(id,mime_type,object_path,status)").eq("id", id).eq("owner_id", user.id).maybeSingle();
   if (error || !report) throw new ApiError("Report unavailable", 404);
   const { data: job, error: quota } = await client.rpc("civic_reserve_report_analysis", { target: id });

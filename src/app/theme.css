@@ -1233,6 +1233,37 @@ td small {
 .analysis-controls label {
   color: var(--muted);
 }
+.analysis-observations {
+  margin: 22px 0;
+}
+.analysis-observations h4 {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+.analysis-observations ul {
+  list-style: none;
+  padding: 0;
+}
+.analysis-observations li {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+.analysis-observations li p {
+  margin: 8px 0;
+}
+.analysis-observations a {
+  color: var(--blue);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.observation-kind {
+  color: var(--ink);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
 .skeleton-number {
   background: var(--surface-alt);
 }
@@ -1820,5 +1851,114 @@ textarea:focus-visible {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Report form: map picker and consent. */
+.location-picker {
+  height: 220px;
+  margin-top: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.location-picker .maplibregl-canvas {
+  cursor: crosshair;
+}
+.location-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+.location-row .muted {
+  margin: 0;
+  font-size: 12px;
+}
+.consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.consent-row input {
+  margin-top: 3px;
+  accent-color: var(--action);
+}
+/* Accountability insights. */
+.archive-insights {
+  margin-top: 20px;
+}
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  padding: 8px 24px 24px;
+}
+.insight-list h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.insight-list > p {
+  margin: 4px 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.insight-list ol {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.insight-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.insight-label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.insight-label b {
+  flex: none;
+  font-weight: 600;
+}
+.insight-label small {
+  margin-left: 8px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.insight-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+.insight-track span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent-soft);
+}
+.insight-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--action);
+}
+@media (max-width: 760px) {
+  .insight-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 8px 16px 20px;
   }
 }

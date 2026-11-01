@@ -4,7 +4,7 @@ export function priorityFor(text: string): {
   reason: string;
 } {
   if (
-    /\b(collapse|electrocution|live wire|immediate danger|sinkhole|open manhole)\b/i.test(
+    /\b(collaps(e|ed|es|ing)|electrocut(ed|ion)|(live|exposed) wires?|immediate danger|sinkholes?|(open|uncovered) man ?holes?|man ?hole( cover)?( is| are)? (open|missing|broken))\b/i.test(
       text,
     )
   )
@@ -13,14 +13,14 @@ export function priorityFor(text: string): {
       reason:
         "An immediate-danger term was reported. Urgent human verification is required.",
     };
-  if (/\b(flood|sewage overflow|blocked road|water main burst)\b/i.test(text))
+  if (/\b(flood(s|ed|ing)?|waterlogg(ed|ing)|sewage( is)? overflow(s|ing)?|blocked roads?|road( is)? blocked|water main burst|burst water main)\b/i.test(text))
     return {
       priority: "High",
       reason:
         "The report describes a potential service interruption or access hazard.",
     };
   if (
-    /\b(pothole|water leak|garbage|blocked drain|broken footpath|street light not working)\b/i.test(
+    /\b(potholes?|water leaks?|garbage|blocked drains?|broken footpaths?|street ?lights?( is| are)? not working)\b/i.test(
       text,
     )
   )

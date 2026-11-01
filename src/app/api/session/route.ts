@@ -1,5 +1,6 @@
 import { sameOrigin } from "@/lib/request-security";
 import { authenticatedDatabase } from "@/lib/supabase";
+import { supabaseConfig } from "@/lib/config";
 import { cloudIdentity, ApiError, apiFailure } from "@/lib/cloud-reports";
 import {
   localMode,
@@ -18,12 +19,30 @@ export async function GET() {
     const { isOperator } = await cloudIdentity();
     return Response.json({ signedIn: true, mode: "cloud", isOperator }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return Response.json({ signedIn: false, mode: "cloud", isOperator: false });
+    if (error instanceof ApiError && error.status === 401) return Response.json({ signedIn: false, mode: "cloud", isOperator: false, ...(await signInOptions()) });
     return apiFailure(error);
+  }
+}
+async function signInOptions() {
+  try {
+    const { url, key } = supabaseConfig();
+    const response = await fetch(url + "/auth/v1/settings", { headers: { apikey: key }, signal: AbortSignal.timeout(4000) });
+    const settings = await response.json();
+    return { google: !!settings.external?.google, guest: !!settings.external?.anonymous_users };
+  } catch {
+    return { google: false, guest: false };
   }
 }
 export async function POST(request: Request) {
   const url = new URL(request.url);
+  if (!localMode() && sameOrigin(request)) {
+    try {
+      const client = await authenticatedDatabase();
+      const { error } = await client.auth.signInAnonymously();
+      if (error) throw new ApiError("Private guest reporting is not available right now.");
+      return Response.json({ signedIn: true, mode: "cloud" }, { headers: { "Cache-Control": "private, no-store" } });
+    } catch (error) { return apiFailure(error); }
+  }
   if (
     !localMode() ||
     !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
