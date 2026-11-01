@@ -265,6 +265,13 @@ try {
     503,
     "Missing AI key produces explicit failure rather than fabricated output",
   );
+  const open = await (await call("/api/public-reports")).json();
+  const listed = open.reports.find((r) => r.ref === report.id.slice(0, 8));
+  check(!!listed, true, "Public dashboard lists every report");
+  check(listed.description, undefined, "Public dashboard omits the description");
+  check(listed.owner, undefined, "Public dashboard omits the owner");
+  check(listed.latitude, 12.97, "Public dashboard rounds the location");
+  check(open.authorities[0].confirmed >= 0, true, "Public dashboard totals by authority");
   const saved = (await (await call("/api/reports", { cookie })).json())
     .reports[0];
   check(

@@ -45,3 +45,7 @@ export function validBengaluruPoint(lat: number, lng: number) {
     lng <= 77.95
   );
 }
+const severityOrder: Priority[] = ["Unassessed", "Low", "Medium", "High", "Critical"];
+export function higherSeverity(a: Priority, b: Priority) {
+  return severityOrder.indexOf(a) >= severityOrder.indexOf(b) ? a : b;
+}

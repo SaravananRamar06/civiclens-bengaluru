@@ -1,6 +1,6 @@
 # CivicLens · Bengaluru
 
-An evidence-first civic grievance and infrastructure triage application, built with Next.js 16, React 19, TypeScript, MapLibre GL, AI SDK 7 and Workflow SDK 5. Local reporting works without cloud credentials. Cloud mode uses Supabase Auth, PostgreSQL/PostGIS and private Storage, with an operator queue and citizen-confirmed closure. A Docker deployment and [hosting guide](docs/HOSTING.md) are included.
+A transparent civic grievance and infrastructure triage system for Bengaluru. Residents report with a photo or voice note, AI rates the severity, the issue is routed to the responsible authority, and a public dashboard shows what happens next. Built with Next.js 16, React 19, TypeScript, MapLibre GL, AI SDK 7 and Workflow SDK 5. Local reporting works without cloud credentials. Cloud mode uses Supabase Auth, PostgreSQL/PostGIS and private Storage, with an operator queue and citizen-confirmed closure. A Docker deployment and [hosting guide](docs/HOSTING.md) are included.
 
 ## Problem and audience
 
@@ -38,7 +38,8 @@ Build uses Next.js's webpack compiler for reliable Workflow SDK integration. Int
 ## What works locally
 
 - Database-backed archive metrics, search/category filtering, case inspection and source attribution.
-- Bengaluru street map. Imported records have ward names, not exact coordinates: no fabricated archive pins are drawn. Your own geolocated reports appear as private markers.
+- Bengaluru street map. Imported records have ward names, not exact coordinates, so no archive pins are drawn. Citizen reports appear publicly at a location rounded to about a kilometre.
+- A public accountability dashboard with reports routed, acknowledged and confirmed per authority.
 - Private browser receipt sessions: cryptographically random HttpOnly cookies, with only hashed tokens stored server-side. This is explicitly anonymous local ownership, **not** simulated Google sign-in.
 - Create real reports with verified Bengaluru coordinate bounds and a tracking ID. Five submissions per receipt per hour.
 - Private photo/audio attachments (5 MB maximum), microphone recording capped at 60 seconds, protected playback and downloads.
@@ -93,6 +94,6 @@ flowchart LR
  Workflow --> Gemini
 ```
 
-`src/lib/triage.ts` contains explicit conservative priority rules. `src/lib/routing.ts` maps categories into project review queues. The AI extracts observations and uncertainty; it does not verify structural safety, quantify contamination or confirm government action.
+`src/lib/routing.ts` assigns each report to the responsible authority. `src/lib/triage.ts` holds safety rules that set a severity floor. Gemini rates severity from the evidence and can raise a rating but not lower that floor. It does not verify structural safety, quantify contamination or confirm government action. Handoff packets are prepared for each authority; nothing is delivered to them automatically.
 
 The code is MIT licensed. Upstream data retains its separate ODbL license. Raw imported data, private reports, evidence, receipt tokens and credentials are excluded from Git.

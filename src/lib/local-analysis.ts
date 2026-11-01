@@ -28,9 +28,13 @@ export async function analyzeLocalReport(id: string, owner: string) {
   const latest = ownedReport(id, owner);
   if (!latest) throw new AnalysisUnavailable("Report unavailable");
   latest.analysis = analysis;
+  latest.priority = analysis.severity;
+  latest.priorityReason = analysis.severityReason;
+  latest.category = analysis.category;
+  latest.authority = analysis.authority;
   latest.events.push({
     action: "Live AI analysis",
-    reason: "Gemini analysis saved; human verification required.",
+    reason: "Severity rated and routing confirmed by Gemini; human verification required.",
     created_at: new Date().toISOString(),
   });
   db()

@@ -6,17 +6,10 @@ import { localMode, localOwner, ownedReports } from "@/lib/local-workspace";
 import { db } from "@/lib/db";
 import { randomUUID } from "node:crypto";
 import { priorityFor } from "@/lib/triage";
-import { reviewQueue } from "@/lib/routing";
+import { authorityFor, reportCategories } from "@/lib/routing";
 const input = z.object({
   description: z.string().trim().min(10).max(4000),
-  category: z.enum([
-    "Road damage",
-    "Water or drainage",
-    "Waste",
-    "Obstruction",
-    "Electrical",
-    "Other",
-  ]),
+  category: z.enum(reportCategories),
   latitude: z.number().min(12.65).max(13.3),
   longitude: z.number().min(77.2).max(77.95),
 });
@@ -81,7 +74,7 @@ export async function POST(request: Request) {
       status: "Submitted",
       priority: policy.priority,
       priorityReason: policy.reason,
-      reviewQueue: reviewQueue(parsed.data.category),
+      authority: authorityFor(parsed.data.category, parsed.data.description),
       created_at: new Date().toISOString(),
       evidence: [],
       events: [

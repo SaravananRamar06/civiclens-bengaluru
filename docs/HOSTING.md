@@ -18,7 +18,7 @@ Use a Supabase project and apply all files in supabase/migrations in filename or
     supabase link --project-ref YOUR_PROJECT_REF
     supabase db push
 
-For an existing CivicLens database, check its migration history first. If the three original migrations are already present, apply only 20261031154739_cloud_reporting.sql through the SQL editor, or reconcile the CLI migration history before pushing. Do not rerun the initial table-creation migrations.
+For an existing CivicLens database, check its migration history first. If the three original migrations are already present, apply 20261031154739_cloud_reporting.sql and then 20261101120000_open_accountability.sql through the SQL editor, or reconcile the CLI migration history before pushing. Do not rerun the initial table-creation migrations.
 
 The new migration creates the private civic-evidence bucket, upload reservations, storage policies, operator transitions and native analysis storage. It seeds no example grievances. Keep the evidence bucket private.
 

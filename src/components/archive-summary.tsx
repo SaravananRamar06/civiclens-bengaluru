@@ -48,14 +48,14 @@ export function ArchiveInsights() {
   }, []);
   return (
     <section className="archive-insights">
-      <h2>Which complaints get closed, and where?</h2>
+      <h2>What the archive shows about each department</h2>
       <p>
         Bar length is the number of complaints. The solid part is the share the
         source marks closed.
       </p>
       {insights ? (
         <div className="insight-grid">
-          <InsightList title="By type of complaint" items={insights.categories} />
+          <InsightList title="By department" items={insights.categories} />
           <InsightList title="By ward name in the source" items={insights.wards} />
         </div>
       ) : (
@@ -107,19 +107,19 @@ export function SourceStatus({ data }: { data: DashboardData | null }) {
 export function ReportingGuide({ onReport }: { onReport: () => void }) {
   return (
     <section className="guide">
-      <h2>How a report gets proven</h2>
+      <h2>From a photo to a confirmed repair</h2>
       <ol>
         <li>
-          <strong>Put it on record</strong>
-          <p>Describe the issue, place it on the map, and add a photo.</p>
+          <strong>Show it or say it</strong>
+          <p>Add a photo or a voice note and place the issue on the map.</p>
         </li>
         <li>
-          <strong>Follow the review</strong>
-          <p>Every step is logged, with the reason and the evidence behind it.</p>
+          <strong>AI rates it and routes it</strong>
+          <p>Gemini rates the severity and the right authority receives a handoff packet.</p>
         </li>
         <li>
-          <strong>Confirm the repair</strong>
-          <p>Only you can close it. If nothing changed, reopen it.</p>
+          <strong>The city watches it close</strong>
+          <p>Progress is public. Only you can confirm the repair, or reopen it.</p>
         </li>
       </ol>
       <button className="primary" onClick={onReport}>

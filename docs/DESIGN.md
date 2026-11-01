@@ -1,6 +1,6 @@
 # CivicLens interface design
 
-The idea is one sentence: closed isn't fixed. Everything visual comes from the world that sentence belongs to, the Indian government complaint slip and the rubber stamp that closes a file.
+The product is a transparent grievance and triage system: photo or voice reports, AI severity, authority routing and a public accountability dashboard. The idea carrying it is one sentence: closed isn't fixed. Everything visual comes from the world that sentence belongs to, the Indian government complaint slip and the rubber stamp that closes a file.
 
 The direction was set after reviewing the showcases [Awwwards](https://www.awwwards.com/websites/) and [Recent](https://recent.design/), which suggested large type as the image, an identity drawn from the subject, and one memorable interaction. No layouts, source or artwork come from any showcased site.
 
