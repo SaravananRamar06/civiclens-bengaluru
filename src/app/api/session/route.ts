@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     try {
       const client = await authenticatedDatabase();
       const { error } = await client.auth.signInAnonymously();
-      if (error) throw new ApiError("Private guest reporting is not available right now.");
+      if (error) throw new ApiError("Private guest reporting is not available right now.", error.code === "anonymous_provider_disabled" ? 403 : 503);
       return Response.json({ signedIn: true, mode: "cloud" }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) { return apiFailure(error); }
   }
