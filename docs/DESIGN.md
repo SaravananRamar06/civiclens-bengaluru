@@ -9,7 +9,7 @@ The frontend is an original Next.js implementation, informed by the four design 
 
 ## Implementation
 
-- The city heading uses large Manrope typography, with a custom focus-mark identity, charcoal navigation, stone surfaces, and a vermilion action colour. Three archive metrics replace the previous four-card block.
+- The city heading uses large Manrope typography, with a custom CL identity, charcoal navigation, stone surfaces, and a vermilion action colour. Three archive metrics replace the previous four-card block.
 - A larger map and a category panel form the main workspace. The leading category share is calculated from the database. Category tabs, search, and list/card controls operate on the same archive API.
 - Shared semantic colour tokens cover light and dark surfaces, text, borders, status colours, map controls, and dialogs.
 - Light, dark, and system preferences persist locally and synchronize across tabs. An inline bootstrap resolves appearance before first paint.
@@ -18,6 +18,12 @@ The frontend is an original Next.js implementation, informed by the four design 
 - The dark map filter applies only to the map canvas; uploaded evidence is displayed without colour alteration.
 
 No additional UI framework or animation dependency is required. Icons use the existing Lucide library; motion uses CSS.
+
+## Logo
+
+The original CivicLens monogram combines an open circular C (the lens) with a geometric L (a street corner). It uses solid paths, so it stays sharp at small sizes and supports a single-colour treatment. The reusable component is `src/components/civic-mark.tsx`; it appears in the desktop brand, mobile header, and footer. `src/app/icon.svg` supplies the browser icon through Next.js metadata.
+
+Transparent SVG assets are available in `public/brand/`: `civiclens-mark.svg` for light backgrounds and `civiclens-mark-reversed.svg` for dark backgrounds. Keep the proportions intact and leave at least one stroke-width of clear space around the mark. The wordmark uses Manrope.
 
 ## Data integrity
 

@@ -40,19 +40,8 @@ import MyReports from "./my-reports";
 import { ReportingGuide, SourceStatus } from "./archive-summary";
 import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
+import CivicMark from "./civic-mark";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
-function CivicMark() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path
-        d="M13 3H3v10M19 3h10v10M29 19v10H19M13 29H3V19"
-        stroke="currentColor"
-        strokeWidth="3"
-      />
-      <circle cx="16" cy="16" r="6" fill="currentColor" />
-    </svg>
-  );
-}
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null),
     [error, setError] = useState(""),
@@ -162,7 +151,7 @@ export default function Dashboard() {
           <span className="brand-mark">
             <CivicMark />
           </span>
-          CivicLens<span className="brand-period">.</span>
+          CivicLens
         </a>
         <div className="workspace-label">THE CITY, IN FOCUS</div>
         <div className="city-select">
@@ -220,7 +209,7 @@ export default function Dashboard() {
         <header className="topbar">
           <a className="mobile-brand" href="/">
             <CivicMark />
-            CivicLens<span>.</span>
+            CivicLens
           </a>
           <div className="breadcrumb">
             Workspace <ChevronRight size={14} />

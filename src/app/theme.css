@@ -99,16 +99,17 @@ textarea {
   font-weight: 750;
 }
 .brand-mark {
-  width: 31px;
-  height: 31px;
+  --logo-core: #f5f4e9;
+  width: 34px;
+  height: 34px;
   color: #f38660;
   background: none;
   border: 0;
   border-radius: 0;
 }
 .brand-mark svg {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
 }
 .brand-period {
   color: #f38660;
@@ -1443,8 +1444,9 @@ textarea:focus-visible {
     letter-spacing: -0.8px;
   }
   .mobile-brand > svg {
-    width: 25px;
-    height: 25px;
+    --logo-core: var(--ink);
+    width: 29px;
+    height: 29px;
     color: var(--blue);
   }
   .mobile-brand > span {
