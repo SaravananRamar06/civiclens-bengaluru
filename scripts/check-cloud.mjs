@@ -8,7 +8,7 @@ const parsed = new URL(origin);
 if(parsed.origin !== origin || (parsed.protocol !== "https:" && !["127.0.0.1","localhost"].includes(parsed.hostname))) throw Error("APP_ORIGIN must be the public HTTPS origin, with no path or trailing slash.");
 const client = createClient(url,key,{auth:{persistSession:false}});
 const version = await client.rpc("civic_schema_version");
-if(version.error || version.data !== 5) throw Error("Cloud schema is incomplete. Apply all committed migrations.");
+if(version.error || version.data !== 6) throw Error("Cloud schema is incomplete. Apply all committed migrations.");
 const source = await client.from("civic_sources").select("id",{head:true,count:"exact"});
 if(source.error) throw Error("Public archive access failed; check grants and RLS.");
 const settings = await fetch(url + "/auth/v1/settings", { headers: {apikey:key} });

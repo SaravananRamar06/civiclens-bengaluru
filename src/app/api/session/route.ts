@@ -16,8 +16,8 @@ export async function GET() {
       { headers: { "Cache-Control": "no-store" } },
     );
   try {
-    const { isOperator } = await cloudIdentity();
-    return Response.json({ signedIn: true, mode: "cloud", isOperator }, { headers: { "Cache-Control": "private, no-store" } });
+    const { isOperator, role, authority } = await cloudIdentity();
+    return Response.json({ signedIn: true, mode: "cloud", isOperator, role, authority }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return Response.json({ signedIn: false, mode: "cloud", isOperator: false, ...(await signInOptions()) });
     return apiFailure(error);

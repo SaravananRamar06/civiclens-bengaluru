@@ -14,9 +14,9 @@ export async function cloudIdentity() {
   const client = await authenticatedDatabase();
   const { data: { user }, error } = await client.auth.getUser();
   if (error || !user) throw new ApiError("Sign in to access your reports.", 401);
-  const membership = await client.from("civic_operators").select("user_id").eq("user_id", user.id).maybeSingle();
+  const membership = await client.from("civic_operators").select("role,authority").eq("user_id", user.id).maybeSingle();
   if (membership.error) throw new ApiError("Could not verify review permissions.");
-  return { client, user, isOperator: !!membership.data };
+  return { client, user, isOperator: !!membership.data, role: membership.data?.role as "admin" | "officer" | undefined, authority: (membership.data?.authority ?? null) as string | null };
 }
 export type CloudIdentity = Awaited<ReturnType<typeof cloudIdentity>>;
 export const reportSelection = "id,owner_id,description,category,authority,latitude,longitude,status,priority,analysis,created_at,civic_evidence(id,mime_type,byte_size,purpose,status,created_at),civic_events(action,reason,created_at)";
@@ -33,7 +33,7 @@ export function cloudReport(row: Row, identity: CloudIdentity) {
     priorityReason: row.analysis?.severityReason ?? priorityFor(row.description).reason, authority: row.authority,
     evidence: row.civic_evidence.filter(e => e.status === "ready").map(e => ({ id: e.id, type: e.mime_type, size: e.byte_size, purpose: e.purpose, created_at: e.created_at })),
     events: row.civic_events.sort((a,b) => a.created_at.localeCompare(b.created_at)),
-    allowedTransitions: permittedTransitions(row.status, row.owner_id === identity.user.id, identity.isOperator),
+    allowedTransitions: permittedTransitions(row.status, row.owner_id === identity.user.id, identity.role === "admin" || (identity.role === "officer" && identity.authority === row.authority)),
     canAnalyze: row.owner_id === identity.user.id,
   };
 }

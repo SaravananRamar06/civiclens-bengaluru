@@ -16,7 +16,8 @@ Transparent Civic Grievance & Infrastructure Triage System: an open platform whe
 2. **AI rates severity.** Gemini reads the photo, voice and text together, transcribes English audio, and rates severity from Critical to Low with its reasons and uncertainty. Deterministic safety rules act as a floor, so AI can raise a rating but cannot lower an obvious danger such as an open manhole.
 3. **Routing.** Each report is assigned to the responsible body: BWSSB for water and sewerage, BESCOM for electricity, BSWML for solid waste, KSPCB for pollution, and the city corporation under the Greater Bengaluru Authority for roads, bridges, stormwater drains and street lights. If the resident isn't sure of the type, AI chooses it. A handoff packet is prepared for that authority.
 4. **Public accountability.** A public dashboard shows, per authority, reports routed, acknowledged, typical response time and repairs confirmed, with a live feed and map pins. Descriptions, evidence, identities and exact locations stay private, and pins are rounded to about a kilometre.
-5. **Closing takes proof.** An operator must attach a photo of the repair, and only the person who reported the issue can confirm it or reopen it.
+5. **Authorities get a scoped desk.** Officers sign in and see only reports routed to their authority, most serious first. Admins see all. Row-level security enforces this in the database.
+6. **Closing takes proof.** An operator must attach a photo of the repair, and only the person who reported the issue can confirm it or reopen it.
 
 **The Complaint Wall** shows all 5,000 archive records as one square each, solid if marked closed. It makes the scale of the problem visible immediately.
 
