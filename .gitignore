@@ -11,3 +11,4 @@ outputs/
 .workflow/
 *.log
 /.swc
+AGENTS.md
