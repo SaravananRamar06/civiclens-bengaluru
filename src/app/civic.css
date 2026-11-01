@@ -1680,3 +1680,8 @@ time {
 .staff-form .primary {
   margin-top: 16px;
 }
+.staff-skip {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+}

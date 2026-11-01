@@ -81,6 +81,9 @@ export default function StaffDialog({
             {busy && <Loader2 className="spin" size={16} />}
             {busy ? "Signing in…" : "Sign in"}
           </button>
+          <button type="button" className="text-button staff-skip" onClick={onClose}>
+            Continue without an account
+          </button>
         </form>
       </section>
     </div>
