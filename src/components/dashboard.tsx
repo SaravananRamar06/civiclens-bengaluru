@@ -363,6 +363,8 @@ export default function Dashboard() {
             Staff sign-in
           </button>
         )}
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
         <a href={sourceUrl} target="_blank" rel="noreferrer">
           Data: Sahaaya archive under ODbL
         </a>
