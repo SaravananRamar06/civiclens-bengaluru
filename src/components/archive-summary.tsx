@@ -114,8 +114,12 @@ export function ReportingGuide({ onReport }: { onReport: () => void }) {
           <p>Add a photo or a voice note and place the issue on the map.</p>
         </li>
         <li>
-          <strong>AI rates it and routes it</strong>
-          <p>Gemini rates the severity and the right authority receives a handoff packet.</p>
+          <strong>It’s rated and assigned</strong>
+          <p>
+            Gemini rates the severity if you allow it, and keyword rules work without it.
+            The report joins the responsible authority’s review queue here, with a handoff
+            packet you can download. CivicLens doesn’t deliver it to the authority.
+          </p>
         </li>
         <li>
           <strong>The city watches it close</strong>

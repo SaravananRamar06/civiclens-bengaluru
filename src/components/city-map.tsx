@@ -61,7 +61,7 @@ export default function CityMap() {
                 new maplibregl.Popup().setText(
                   reports
                     .slice(0, 4)
-                    .map((r) => `${r.category}. ${r.severity} severity. ${r.status}. Routed to ${r.authority}.`)
+                    .map((r) => `${r.category}. ${r.severity} severity. ${r.status}. Assigned to ${r.authority}.`)
                     .join(" ") + (reports.length > 4 ? ` And ${reports.length - 4} more.` : ""),
                 ),
               )

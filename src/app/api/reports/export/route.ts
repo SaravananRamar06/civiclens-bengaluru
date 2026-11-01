@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     "",
     `Evidence attachments: ${report.evidence?.length ?? 0}`,
     "The reporter’s identity, exact location and private attachments are not included.",
-    "CivicLens is an independent project. This packet was prepared for handoff and has not been accepted by any authority.",
+    "CivicLens is an independent project. This packet was prepared for handoff. CivicLens has not delivered it, and no authority has accepted it.",
   ].join("\n");
   return new Response(text, {
     headers: {

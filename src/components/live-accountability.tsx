@@ -60,8 +60,8 @@ export default function LiveAccountability({ onReport }: { onReport: () => void 
               <thead>
                 <tr>
                   <th scope="col">Authority</th>
-                  <th scope="col">Routed</th>
-                  <th scope="col">Acknowledged</th>
+                  <th scope="col">Assigned</th>
+                  <th scope="col">Acknowledged in CivicLens</th>
                   <th scope="col">Typical response</th>
                   <th scope="col">Confirmed fixed</th>
                 </tr>
@@ -96,8 +96,9 @@ export default function LiveAccountability({ onReport }: { onReport: () => void 
           </ol>
           <p className="muted">
             Filed by residents and rated provisionally. Locations are rounded to
-            about a kilometre. Being routed does not mean an authority has
-            accepted a report.
+            about a kilometre. CivicLens doesn’t deliver reports to government
+            authorities, so being assigned doesn’t mean an authority has seen or
+            accepted one. Acknowledgements are recorded by CivicLens staff accounts.
           </p>
         </>
       )}

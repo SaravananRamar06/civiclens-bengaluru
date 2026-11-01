@@ -180,7 +180,7 @@ export default function Dashboard() {
               <div className="hero-foot">
                 <p>
                   {data
-                    ? `This archive holds ${data.total.toLocaleString("en-IN")} complaints filed in Bengaluru ${archivePeriod(data.dateRange)}. The source marks ${data.closed.toLocaleString("en-IN")} of them closed. It can’t tell you how many were repaired. So send a photo or a voice note. AI rates the severity, the right authority gets it, and the whole city can see what happens next.`
+                    ? `This archive holds ${data.total.toLocaleString("en-IN")} complaints filed in Bengaluru ${archivePeriod(data.dateRange)}. The source marks ${data.closed.toLocaleString("en-IN")} of them closed. It can’t tell you how many were repaired. So add a photo or a voice note. CivicLens rates the severity, assigns it to the responsible authority’s review queue, and shows the whole city what happens next.`
                     : "Loading the Bengaluru complaint archive…"}
                 </p>
                 <div className="hero-actions">

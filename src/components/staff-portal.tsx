@@ -90,7 +90,7 @@ function DepartmentTable({ reports }: { reports: PublicReport[] }) {
         <thead>
           <tr>
             <th scope="col">Department</th>
-            <th scope="col">Routed</th>
+            <th scope="col">Assigned</th>
             <th scope="col">Open</th>
             <th scope="col">Critical and open</th>
             <th scope="col">Confirmed fixed</th>
@@ -143,19 +143,19 @@ export function DepartmentView({ department }: { department: string }) {
     .sort((a, b) => severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity));
   const open = own.filter((r) => r.status !== "Closed");
   return (
-    <Portal title={name} intro="Reports routed to this department, most serious first.">
+    <Portal title={name} intro="Reports assigned to this department’s review queue, most serious first.">
       <SignIn staff={staff} setStaff={setStaff} />
       {failed ? (
         <p className="empty">This queue can’t load right now. Refresh to try again.</p>
       ) : !reports ? (
         <p className="empty">Loading the queue…</p>
       ) : own.length === 0 ? (
-        <p className="empty">No reports have been routed here yet.</p>
+        <p className="empty">No reports have been assigned here yet.</p>
       ) : (
         <>
           <dl className="live-figures">
             {[
-              ["Routed", own.length],
+              ["Assigned", own.length],
               ["Open", open.length],
               ["Critical and open", open.filter((r) => r.severity === "Critical").length],
               ["Confirmed fixed", own.length - open.length],

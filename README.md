@@ -1,6 +1,6 @@
 # CivicLens
 
-**Closed isn't fixed.** A transparent civic grievance and infrastructure triage system for Bengaluru. Report a problem with a photo or your voice, and AI rates how serious it is. The responsible authority receives it, and the whole city can see what happens next.
+**Closed isn't fixed.** A transparent civic grievance and infrastructure triage system for Bengaluru. Report a problem with a photo or your voice, and AI rates how serious it is. CivicLens assigns it to the responsible authority's review queue, and the whole city can see what happens next.
 
 **Live app:** https://civiclens-bengaluru.vercel.app
 
@@ -20,7 +20,7 @@ Residents also have to work out which body is responsible before they can compla
 
 1. **Show it or say it.** A resident adds a photo or a voice note and places the issue on a map. No account is needed, and typing is optional.
 2. **AI rates the severity.** Gemini reads the photo, voice and text together, transcribes speech, and rates the issue from Critical to Low with its reasons and what it is unsure about.
-3. **The right authority receives it.** The report is assigned to the responsible body, with a handoff packet addressed to them.
+3. **It joins the right review queue.** The report is assigned to the responsible body's queue in CivicLens, with a handoff packet to download. CivicLens does not deliver it to the authority.
 4. **Officers work a scoped desk.** Each officer signs in and sees only their authority's reports, most serious first.
 5. **The city can watch.** A public dashboard shows each authority's reports, response time and confirmed repairs.
 6. **Closing takes proof.** An officer must attach a photo of the repair, and only the person who filed the report can confirm it or reopen it.
@@ -88,7 +88,7 @@ Administrators issue staff accounts from the `/admin` page, and officers sign in
 | Role | Can see | Can do |
 |---|---|---|
 | Citizen or guest | Their own reports and the public dashboard | File reports, confirm or reopen their own |
-| Officer | Reports routed to their authority | Move those reports through review, propose a resolution |
+| Officer | Reports assigned to their authority | Move those reports through review, propose a resolution |
 | Admin | Every report | The same, for every authority |
 
 ### Privacy

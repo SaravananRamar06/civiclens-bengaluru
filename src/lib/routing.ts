@@ -39,7 +39,7 @@ export function authorityFor(category: string, text = "") {
       return authorities.general;
   }
 }
-/** Reads the type of issue from the words used, so reports still reach the right body without AI. */
+/** Reads the type of issue from the words used, so reports still get the right assignment without AI. */
 export function inferCategory(text: string) {
   const rules: [(typeof reportCategories)[number], RegExp][] = [
     ["Electrical", /\b(live wires?|hanging wires?|exposed wires?|electric(al|ity)?|power cut|transformer|street ?lights?)\b/i],

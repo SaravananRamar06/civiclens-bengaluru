@@ -89,6 +89,15 @@ try {
   check((await (await call("/api/admin/staff",operator)).json()).staff.some(s=>s.email===newOfficer.email),true,"An admin lists staff accounts");
   check((await call("/api/archive?q="+encodeURIComponent("' OR 1=1--"))).status,200,"Archive search survives punctuation");
   check((await call("/api/archive?page=9999")).status,200,"Archive page past the end is empty, not an error");
+  const tiedMarker = "isolatedpaginationfixture", tiedIds = Array.from({length:18},(_,i)=>"tied-"+String(i).padStart(2,"0"));
+  const fixture = (id,reported_at) => ({id,category:"Isolated",detail:tiedMarker,ward:"Isolated ward",reported_at,source_status:"Registered",source_url:"https://example.test/isolated",fetched_at:new Date().toISOString()});
+  assert.ifError((await admin.from("civic_sources").insert([...[...tiedIds].reverse().map(id=>fixture(id,"2026-01-01 10:00:00")),fixture("newest","2026-01-02 10:00:00")])).error);
+  const archivePage = async page => (await call("/api/archive?q="+tiedMarker+"&page="+page)).json();
+  const walked = [];
+  for (let page=0;page<3;page++) { const body = await archivePage(page); check(body.matched,19,"Archive page "+(page+1)+" keeps the full count"); walked.push(...body.reports.map(r=>r.id)); }
+  check(walked,["newest",...tiedIds],"Archive pages return every tied record once, newest first and then by id");
+  const pastEnd = await archivePage(9999);
+  check([pastEnd.reports.length,pastEnd.matched],[0,19],"Archive page past the end keeps the full count");
   check((await transition(report.id,owner,"Acknowledged")).status,403,"Citizen cannot acknowledge own report in cloud mode");
   check((await transition(report.id,operator,"Acknowledged")).status,200,"Operator acknowledges report");
   check((await transition(report.id,operator,"In progress")).status,200,"Operator starts review work");
