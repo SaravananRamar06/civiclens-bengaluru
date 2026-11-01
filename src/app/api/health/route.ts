@@ -3,29 +3,39 @@ import { publicDatabase } from "@/lib/supabase";
 import { localMode, appOrigin } from "@/lib/config";
 export const dynamic = "force-dynamic";
 export async function GET() {
+  const cloud = !localMode();
+  let stage = "configuration";
   try {
-    const cloud =
-      !localMode();
     if (cloud) {
       appOrigin();
+      stage = "schema";
       const version = await publicDatabase().rpc("civic_schema_version");
       if (version.error || version.data !== 4) throw Error("Apply cloud migrations");
-      const { error } = await publicDatabase()
+      stage = "archive";
+      const { error, count } = await publicDatabase()
         .from("civic_sources")
-        .select("id")
-        .limit(1);
+        .select("id", { head: true, count: "exact" });
       if (error) throw error;
-    } else db().prepare("SELECT 1").get();
+      return Response.json({
+        status: "ok",
+        city: "Bengaluru",
+        database: "supabase-postgresql",
+        archiveRecords: count,
+        authConfigured: true,
+        aiConfigured: !!process.env.GEMINI_API_KEY,
+      });
+    }
+    db().prepare("SELECT 1").get();
     return Response.json({
       status: "ok",
       city: "Bengaluru",
-      database: cloud ? "supabase-postgresql" : "sqlite",
-      authConfigured: cloud,
+      database: "sqlite",
+      authConfigured: false,
       aiConfigured: !!process.env.GEMINI_API_KEY,
     });
   } catch {
     return Response.json(
-      { status: "error", error: "Database unavailable" },
+      { status: "error", error: "Database unavailable", failedAt: stage },
       { status: 503 },
     );
   }

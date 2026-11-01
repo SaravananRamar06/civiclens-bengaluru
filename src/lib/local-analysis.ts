@@ -10,7 +10,7 @@ export async function analyzeLocalReport(id: string, owner: string) {
   if (!report) throw new AnalysisUnavailable("Report unavailable");
   if (!process.env.GEMINI_API_KEY)
     throw new AnalysisUnavailable(
-      "Configure GEMINI_API_KEY in .env.local for live AI. Your report and evidence remain saved.",
+      "AI analysis is not switched on yet. Your report and evidence remain saved.",
     );
   const last = report.analysis?.completedAt;
   if (last && Date.now() - Date.parse(last) < 60000)

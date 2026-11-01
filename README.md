@@ -2,6 +2,14 @@
 
 An evidence-first civic grievance and infrastructure triage application, built with Next.js 16, React 19, TypeScript, MapLibre GL, AI SDK 7 and Workflow SDK 5. Local reporting works without cloud credentials. Cloud mode uses Supabase Auth, PostgreSQL/PostGIS and private Storage, with an operator queue and citizen-confirmed closure. A Docker deployment and [hosting guide](docs/HOSTING.md) are included.
 
+## Problem and audience
+
+Residents reporting damaged streets, water leaks, waste, and electrical hazards need a clear record of the evidence and what happened next. An administrative “closed” status alone does not demonstrate a repair. CivicLens serves Bengaluru residents and project review operators by connecting private visual/audio evidence, conservative triage, a review queue, and citizen-confirmed closure.
+
+The existing Sahaaya archive supplies historical context; it is not a live incident feed. Project queues and handoff exports do not imply an integration with BBMP or another authority.
+
+See the [submission draft](docs/SUBMISSION.md) and [hackathon compliance audit](docs/HACKATHON_COMPLIANCE.md) for verified capabilities, remaining submission items, and the live-demo checklist.
+
 ## Run locally
 
 Requires **Node.js 24** (the local backend uses `node:sqlite`).
@@ -36,6 +44,8 @@ Build uses Next.js's webpack compiler for reliable Workflow SDK integration. Int
 - Private photo/audio attachments (5 MB maximum), microphone recording capped at 60 seconds, protected playback and downloads.
 - Local review queues and audited transitions: Submitted → Acknowledged → In progress → Handoff prepared/Resolution proposed → Closed or Reopened. A resolution proposal requires image evidence. Local actions do not represent government acceptance or work.
 - Handoff packet export without exact coordinates or private attachment bytes.
+- Report form with a Bengaluru map picker, an optional photo and optional AI analysis in one step.
+- Accountability insights computed from the archive: source closure share by category and ward label.
 - Optional live Gemini analysis of text, photographs and English audio, with evidence IDs, transcription, uncertainty and explicit consent. **Requires your own Gemini key. No fabricated AI output is provided.**
 
 ## Data integrity

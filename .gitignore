@@ -6,6 +6,7 @@ node_modules/
 outputs/
 *.tsbuildinfo
 .vercel/
+.playwright-mcp/
 .workflow-data/
 .workflow/
 *.log

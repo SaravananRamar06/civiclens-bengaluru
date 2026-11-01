@@ -26,15 +26,13 @@ function normalize(payload: string): CivicReport {
     ward: r["Ward Name"] || "Location unavailable",
     date: r["Grievance Date"] || "",
     status: r["Grievance Status"] || "Unknown",
-    remarks: r["Staff Remarks"] || "",
+    remarks: "Source remarks are omitted from the public view.",
     source: "Sahaaya archive",
     priority: "Unassessed",
   };
 }
 export async function dashboard(): Promise<DashboardData> {
-  if (
-    !localMode()
-  ) {
+  if (!localMode()) {
     const client = publicDatabase();
     const [stats, categories, records] = await Promise.all([
       client.rpc("civic_source_stats"),

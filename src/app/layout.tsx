@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import "./design.css";
-import "./theme.css";
+import { Big_Shoulders, Noto_Sans_Kannada, Public_Sans } from "next/font/google";
+import "./civic.css";
 import { themeBootstrap } from "@/lib/theme";
+const display = Big_Shoulders({ subsets: ["latin"], variable: "--font-display", adjustFontFallback: false });
+const body = Public_Sans({ subsets: ["latin"], variable: "--font-body" });
+const kannada = Noto_Sans_Kannada({ subsets: ["kannada"], weight: "800", variable: "--font-kannada" });
+const description =
+  "Bengaluru’s complaint archive says closed. CivicLens asks whether it was fixed, with evidence, a traceable review and citizen-confirmed repairs.";
 export const metadata: Metadata = {
   title: "CivicLens · Bengaluru",
-  description:
-    "Evidence-led civic reporting and transparent infrastructure triage for Bengaluru.",
+  description,
+  openGraph: { title: "CivicLens · Bengaluru", description, type: "website" },
+  twitter: { card: "summary", title: "CivicLens · Bengaluru", description },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} ${kannada.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>

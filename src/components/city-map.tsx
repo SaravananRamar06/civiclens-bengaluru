@@ -41,6 +41,8 @@ export default function CityMap() {
       );
       map.on("load", async () => {
         try {
+          const session = await fetch("/api/session").then((r) => r.json());
+          if (!session.signedIn) return;
           const response = await fetch("/api/reports");
           if (!response.ok) return;
           const body = await response.json();

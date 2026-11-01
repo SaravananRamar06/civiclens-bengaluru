@@ -2,16 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import AnalysisControls, { type LocalAnalysis } from "./analysis-controls";
 import { relatedReports } from "@/lib/spatial";
-import {
-  FileText,
-  Plus,
-  ShieldCheck,
-  Loader2,
-  Mic,
-  Paperclip,
-  RefreshCw,
-  Square,
-} from "lucide-react";
+import { Loader2, Mic, Paperclip, Square } from "lucide-react";
 type Report = {
   id: string;
   description: string;
@@ -43,9 +34,12 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
     [message, setMessage] = useState(""),
     [mode, setMode] = useState(""),
     [isOperator, setIsOperator] = useState(false),
-    [review, setReview] = useState(false);
-  const refresh = () =>
-    fetch("/api/reports" + (review ? "?scope=review" : ""), {
+    [review, setReview] = useState(false),
+    [loaded, setLoaded] = useState(false),
+    [loading, setLoading] = useState(true);
+  const refresh = () => {
+    setLoading(true);
+    return fetch("/api/reports" + (review ? "?scope=review" : ""), {
       cache: "no-store",
     })
       .then(async (r) => {
@@ -55,11 +49,15 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
         setMode(body.mode);
         setIsOperator(body.isOperator);
         setMessage("");
+        setLoaded(true);
       })
       .catch((e) => {
         setReports([]);
         setMessage(e.message);
-      });
+        setLoaded(false);
+      })
+      .finally(() => setLoading(false));
+  };
   useEffect(() => {
     refresh();
   }, [review]);
@@ -73,21 +71,14 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
       .catch(() => {});
   }, []);
   return (
-    <section className="panel my-reports">
-      <div className="panel-heading">
-        <div>
-          <h2>
-            {review ? "Operator review queue" : "My reports"}{" "}
-            <span className="count-pill">{reports.length}</span>
-          </h2>
-          <p>
-            {mode === "local-receipt"
-              ? "Private reports owned by this browser receipt. Local review actions are not government actions."
-              : "Private cloud reports. Project operators review evidence; citizens confirm closure. No government acceptance is implied."}
-          </p>
-        </div>
+    <section className="my-reports">
+      <div className="report-tools">
+        <p>
+          {mode === "local-receipt"
+            ? "Saved privately in this browser. Review steps here are not government actions."
+            : "Private to you and the project’s reviewers. You confirm every repair. Nothing here is a government action."}
+        </p>
         <button className="text-button" onClick={refresh}>
-          <RefreshCw size={15} />
           Refresh
         </button>
       </div>
@@ -125,7 +116,7 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
         )}
       </div>
       {reports.length > 0 && (
-        <p className="muted">Showing up to 100 recent reports in this view.</p>
+        <p className="muted">Showing your latest {reports.length} of up to 100 reports.</p>
       )}
       {message && (
         <div className="notice" role="status">
@@ -135,16 +126,15 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
           </button>
         </div>
       )}
-      {!reports.length && !message && (
+      {loading && (
+        <p className="empty" role="status">
+          <Loader2 size={16} className="spin" /> Loading your reports…
+        </p>
+      )}
+      {!loading && loaded && !reports.length && !message && (
         <div className="empty">
-          <FileText size={27} />
-          <h3>Your first report starts here.</h3>
-          <p>
-            Report a civic issue in Bengaluru. Your submissions and their review
-            history will appear here.
-          </p>
+          <p>You haven’t reported anything yet. Your reports and their review history will appear here.</p>
           <button className="primary" onClick={onReport}>
-            <Plus size={16} />
             Report an issue
           </button>
         </div>
@@ -158,6 +148,22 @@ export default function MyReports({ onReport }: { onReport: () => void }) {
         />
       ))}
     </section>
+  );
+}
+const trail = ["Submitted", "Acknowledged", "In progress", "Resolution proposed", "Closed"];
+function StampTrail({ status }: { status: string }) {
+  const position = trail.indexOf(status === "Handoff prepared" ? "In progress" : status);
+  return (
+    <ol className="stamp-trail" aria-label={"Review progress: " + status}>
+      {trail.map((step, index) => (
+        <li
+          key={step}
+          data-state={index === position ? "current" : index < position ? "done" : undefined}
+        >
+          {step === "Closed" ? "Confirmed by you" : step}
+        </li>
+      ))}
+    </ol>
   );
 }
 function LocalCase({
@@ -257,12 +263,8 @@ function LocalCase({
         >
           {r.status}
         </span>
-        <span className="private-badge">
-          <ShieldCheck size={13} />
-          Private report
-        </span>
-        <span className="review-status">
-          {r.priority} · provisional policy assessment
+        <span className={r.priority === "Critical" ? "priority-critical" : undefined}>
+          {r.priority} priority, provisional
         </span>
         <time>{new Date(r.created_at).toLocaleString("en-IN")}</time>
       </div>
@@ -276,13 +278,11 @@ function LocalCase({
           . Proximity does not establish that these are the same issue.
         </p>
       )}
-      <span className="capability-tag">
-        Project queue: {r.reviewQueue || "General civic review"}
-      </span>
+      <StampTrail status={r.status} />
       <p>{r.description}</p>
-      <small className="muted">
-        {r.priorityReason} · Tracking ID {r.id}
-      </small>
+      <p className="muted">
+        {r.priorityReason} Queue: {r.reviewQueue || "General civic review"}. Tracking ID: {r.id}
+      </p>
       <div className="evidence-grid">
         {r.evidence?.map((e) => {
           const url = `/api/reports/evidence?reportId=${r.id}&id=${e.id}`;
@@ -324,7 +324,7 @@ function LocalCase({
           href={`/api/reports/export?id=${r.id}`}
           download
         >
-          Download handoff
+          Download handoff packet
         </a>
       </div>
       {options.length > 0 ? (
@@ -364,7 +364,7 @@ function LocalCase({
           </select>
           <input
             className="report-input"
-            placeholder="Reason / evidence for this review action"
+            placeholder="Reason or evidence for this step"
             required
             minLength={3}
             maxLength={2000}
