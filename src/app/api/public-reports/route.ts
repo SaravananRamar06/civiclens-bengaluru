@@ -6,7 +6,7 @@ export async function GET() {
     const reports = await publicReports();
     return Response.json(
       { reports, authorities: authorityRecords(reports) },
-      { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch {
     return Response.json(
