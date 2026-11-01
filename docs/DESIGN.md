@@ -27,7 +27,7 @@ Sentence case, plain words, no all-caps labels, and no dot-separated metadata. B
 
 ## Logo
 
-The monogram combines an open circular C (the lens) with a geometric L (a street corner). The reusable component is `src/components/civic-mark.tsx`, and `src/app/icon.svg` supplies the browser icon. Transparent SVG assets are in `public/brand/`.
+The monogram combines an open circular C (the lens) with a geometric L (a street corner). The reusable component is `src/components/civic-mark.tsx`, and `src/app/icon.svg` supplies the browser icon.
 
 ## Data integrity
 

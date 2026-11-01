@@ -14,7 +14,6 @@ export type CivicReport = {
   analysis?: string;
 };
 export type DashboardData = {
-  reports: CivicReport[];
   total: number;
   closed: number;
   wards: number;
