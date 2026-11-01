@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./design.css";
+import "./theme.css";
+import { themeBootstrap } from "@/lib/theme";
 export const metadata: Metadata = {
   title: "CivicLens · Bengaluru",
   description:
@@ -8,7 +10,10 @@ export const metadata: Metadata = {
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body>{children}</body>
     </html>
   );
