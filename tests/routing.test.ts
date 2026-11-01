@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { authorities, authorityFor } from "../src/lib/routing";
 import { authorityRecords, roughly, type PublicReport } from "../src/lib/accountability";
 import { higherSeverity, priorityFor } from "../src/lib/triage";
-import { isWorkEmail } from "../src/lib/staff";
 describe("authority routing", () => {
   it.each([
     ["Road damage", "Bridge railing is cracked", authorities.roads],
@@ -53,12 +52,5 @@ describe("public accountability", () => {
       confirmed: 1,
       medianHours: 4,
     });
-  });
-});
-describe("staff access requests", () => {
-  it("accepts a work address", () => expect(isWorkEmail("officer@bwssb.example.in")).toBe(true));
-  it("refuses personal addresses", () => {
-    expect(isWorkEmail("someone@gmail.com")).toBe(false);
-    expect(isWorkEmail("SOMEONE@YAHOO.CO.IN")).toBe(false);
   });
 });

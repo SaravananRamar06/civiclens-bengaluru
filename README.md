@@ -83,7 +83,7 @@ City corporations sit under the Greater Bengaluru Authority, which replaced the 
 
 ### Roles and access
 
-Officers request access with a work email from the page footer, and an administrator approves each request. Access is enforced by row-level security in the database, so it holds even for direct API calls.
+Administrators issue staff accounts from the `/admin` page, and officers sign in at `/staff`. Each department has a public queue at `/department`, showing anonymised data; private details need a staff sign-in. Access is enforced by row-level security in the database, so it holds even for direct API calls.
 
 | Role | Can see | Can do |
 |---|---|---|

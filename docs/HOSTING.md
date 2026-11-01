@@ -46,14 +46,7 @@ There are three levels of access, enforced by row-level security in the database
 | Officer | Reports routed to their authority | Move those reports through review and propose a resolution |
 | Admin | Every report | The same, for every authority |
 
-Officers request access from Staff sign-in in the page footer, using a work email. They confirm their address, and the account has no access until an administrator approves it. To see who is waiting:
-
-    select email, raw_user_meta_data->>'requested_authority' as requested
-    from auth.users
-    where raw_user_meta_data ? 'requested_authority'
-      and id not in (select user_id from public.civic_operators);
-
-Check the person belongs to that authority, then run one of these as a database administrator:
+Create the first admin under Supabase Authentication, Users, then grant the role below. After that, admins create staff accounts on the `/admin` page and give each person their sign-in details. To create one by hand, run one of these as a database administrator:
 
     insert into public.civic_operators(user_id, role, authority)
     select id, 'officer', 'BWSSB: water and sewerage' from auth.users where email = 'REPLACE_WITH_EMAIL';
@@ -61,7 +54,7 @@ Check the person belongs to that authority, then run one of these as a database 
     insert into public.civic_operators(user_id, role)
     select id, 'admin' from auth.users where email = 'REPLACE_WITH_EMAIL';
 
-Authority names are listed in `src/lib/routing.ts`. Staff sign in from the link in the page footer. These are project roles, not government credentials. Proposing a resolution needs a repair photo from the current review cycle, and only the person who filed the report can confirm it or reopen it.
+Authority names are listed in `src/lib/routing.ts`. Staff sign in at `/staff`. These are project roles, not government credentials. Proposing a resolution needs a repair photo from the current review cycle, and only the person who filed the report can confirm it or reopen it.
 
 ## 5. Import the archive and check
 

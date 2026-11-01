@@ -19,7 +19,7 @@ import { useDialog } from "./use-dialog";
 import ThemeControl from "./theme-control";
 import CivicMark from "./civic-mark";
 import CityWall from "./city-wall";
-import StaffDialog, { type Staff } from "./staff-dialog";
+import type { Staff } from "./staff-dialog";
 import LiveAccountability from "./live-accountability";
 import CivicStamp, { StampTexture } from "./civic-stamp";
 const sourceUrl = "https://github.com/Vonter/bbmp-citizen-grievances";
@@ -55,12 +55,15 @@ export default function Dashboard() {
     [reporting, setReporting] = useState(false),
     [view, setView] = useState("City"),
     [stamped, setStamped] = useState(false),
-    [staff, setStaff] = useState<Staff | null>(null),
-    [staffSignIn, setStaffSignIn] = useState(false);
+    [staff, setStaff] = useState<Staff | null>(null);
   useEffect(() => {
     fetch("/api/session")
       .then((r) => r.json())
-      .then((s) => s.role && setStaff({ role: s.role, authority: s.authority }))
+      .then((s) => {
+        if (!s.role) return;
+        setStaff({ role: s.role, authority: s.authority });
+        if (location.hash === "#desk") setView("Authority desk");
+      })
       .catch(() => {});
   }, []);
   const tabs = staff ? [{ name: "Authority desk", Icon: Inbox }, ...views] : views;
@@ -358,27 +361,13 @@ export default function Dashboard() {
       </main>
       <footer className="colophon">
         <span>CivicLens, an independent project for Bengaluru.</span>
-        {!staff && data?.configured.auth && (
-          <button className="text-button" onClick={() => setStaffSignIn(true)}>
-            Staff sign-in
-          </button>
-        )}
+        <a href="/staff">Staff and departments</a>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
         <a href={sourceUrl} target="_blank" rel="noreferrer">
           Data: Sahaaya archive under ODbL
         </a>
       </footer>
-      {staffSignIn && (
-        <StaffDialog
-          onClose={() => setStaffSignIn(false)}
-          onSignedIn={(account) => {
-            setStaff(account);
-            setStaffSignIn(false);
-            setView("Authority desk");
-          }}
-        />
-      )}
       {selected && (
         <CaseDrawer
           report={selected}
