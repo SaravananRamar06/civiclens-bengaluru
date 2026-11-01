@@ -46,7 +46,14 @@ There are three levels of access, enforced by row-level security in the database
 | Officer | Reports routed to their authority | Move those reports through review and propose a resolution |
 | Admin | Every report | The same, for every authority |
 
-Create the account under Supabase Authentication, Users, with an email and password. Then run one of these as a database administrator:
+Officers request access from Staff sign-in in the page footer, using a work email. They confirm their address, and the account has no access until an administrator approves it. To see who is waiting:
+
+    select email, raw_user_meta_data->>'requested_authority' as requested
+    from auth.users
+    where raw_user_meta_data ? 'requested_authority'
+      and id not in (select user_id from public.civic_operators);
+
+Check the person belongs to that authority, then run one of these as a database administrator:
 
     insert into public.civic_operators(user_id, role, authority)
     select id, 'officer', 'BWSSB: water and sewerage' from auth.users where email = 'REPLACE_WITH_EMAIL';

@@ -107,7 +107,7 @@ export default function MyReports({
         </div>
       )}
       {reports.length > 0 && (
-        <p className="muted">Showing your latest {reports.length} of up to 100 reports.</p>
+        <p className="muted">Showing {desk ? "the" : "your"} latest {reports.length} of up to 100 reports.</p>
       )}
       {message && (
         <div className="notice" role="status">
@@ -149,7 +149,7 @@ export default function MyReports({
   );
 }
 const trail = ["Submitted", "Acknowledged", "In progress", "Resolution proposed", "Closed"];
-function StampTrail({ status }: { status: string }) {
+function StampTrail({ status, desk }: { status: string; desk: boolean }) {
   const position = trail.indexOf(status === "Handoff prepared" ? "In progress" : status);
   return (
     <ol className="stamp-trail" aria-label={"Review progress: " + status}>
@@ -158,7 +158,7 @@ function StampTrail({ status }: { status: string }) {
           key={step}
           data-state={index === position ? "current" : index < position ? "done" : undefined}
         >
-          {step === "Closed" ? "Confirmed by you" : step}
+          {step === "Closed" ? (desk ? "Confirmed by reporter" : "Confirmed by you") : step}
         </li>
       ))}
     </ol>
@@ -278,7 +278,7 @@ function LocalCase({
           . Proximity does not establish that these are the same issue.
         </p>
       )}
-      <StampTrail status={r.status} />
+      <StampTrail status={r.status} desk={desk} />
       <p>{r.description}</p>
       {desk && (
         <a

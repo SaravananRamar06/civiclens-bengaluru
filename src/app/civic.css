@@ -1637,3 +1637,21 @@ time {
 .legal ul {
   margin-bottom: 12px;
 }
+.result > .civic-stamp {
+  right: 56px;
+}
+.result-severity {
+  margin-right: 230px;
+}
+@media (max-width: 760px) {
+  .result-severity {
+    margin-right: 40px;
+  }
+}
+@media (max-width: 760px) {
+  .masthead nav {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+}
