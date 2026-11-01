@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2, MapPin, X, ShieldCheck } from "lucide-react";
+import { Loader2, MapPin, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useDialog } from "./use-dialog";
+import CivicStamp from "./civic-stamp";
 import { validBengaluruPoint } from "@/lib/triage";
 import type { Point } from "./location-picker";
 const LocationPicker = dynamic(() => import("./location-picker"), {
@@ -135,22 +136,11 @@ export default function ReportDialog({
         >
           <X />
         </button>
-        <div className="modal-emblem">
-          <MapPin size={25} />
-        </div>
-        <span className="section-kicker">YOUR CITY. YOUR VOICE.</span>
-        <h2 id="report-title">Make the issue visible.</h2>
+        <h2 id="report-title">Report an issue in Bengaluru</h2>
         <p>
-          Submit genuine evidence of a local civic issue in Bengaluru. Your
-          identity and exact location remain private.
+          Your report, photo and exact location stay private. Leave personal
+          details out of the description.
         </p>
-        <div className="privacy-strip">
-          <ShieldCheck size={17} />
-          <span>
-            Private evidence. A traceable review. No personal details required
-            in your description.
-          </span>
-        </div>
         {!signedIn ? (
           <>
             <div className="notice">
@@ -164,12 +154,12 @@ export default function ReportDialog({
             </div>
             {(mode === "local-receipt" || guest) && (
               <button className="primary full-width" onClick={start}>
-                Continue privately <ArrowRight size={16} />
+                Continue privately
               </button>
             )}
             {mode === "cloud" && google && (
               <a className="text-button" href="/auth/signin">
-                Continue with Google <ArrowRight size={16} />
+                Continue with Google
               </a>
             )}
           </>
@@ -280,11 +270,7 @@ export default function ReportDialog({
               className="primary full-width"
               disabled={!!busy || !!reportId}
             >
-              {busy ? (
-                <Loader2 className="spin" size={16} />
-              ) : (
-                <ArrowRight size={16} />
-              )}
+              {busy && <Loader2 className="spin" size={16} />}
               {busy || "Save report"}
             </button>
           </form>
@@ -305,11 +291,12 @@ export default function ReportDialog({
           </div>
         )}
         {reportId && !busy && (
-          <div className="analysis-result">
-            <strong>Report saved.</strong>
-            <p>Tracking ID: {reportId}</p>
-            <button className="primary" onClick={onSaved}>
-              Track this report <ArrowRight size={16} />
+          <div className="slip-receipt">
+            <CivicStamp english="Received" kannada="ಸ್ವೀಕರಿಸಲಾಗಿದೆ" className="slip-stamp" />
+            <strong>Report saved</strong>
+            <p className="muted">Tracking ID: {reportId}</p>
+            <button className="primary full-width" onClick={onSaved}>
+              Track this report
             </button>
           </div>
         )}

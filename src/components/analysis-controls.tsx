@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
 export type LocalAnalysis = {
   summary: string;
   transcript: string;
@@ -62,8 +61,7 @@ export default function AnalysisControls({
             }
           }}
         >
-          <Sparkles size={16} />
-          {busy ? "Analyzing evidence…" : "Analyze real evidence"}
+          {busy ? "Analysing evidence…" : "Analyse with AI"}
         </button>
       </div>
       {message && (
@@ -73,7 +71,7 @@ export default function AnalysisControls({
       )}
       {analysis && (
         <div className="analysis-result">
-          <strong>Provisional AI assessment · {analysis.model}</strong>
+          <strong>Provisional AI assessment from {analysis.model}</strong>
           <p>{analysis.summary}</p>
           {Boolean(analysis.observations?.length) && (
             <div className="analysis-observations">
